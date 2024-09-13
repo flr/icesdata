@@ -36,7 +36,7 @@ iFig=0
 iTab=0
 ```
 
-```{r}
+```{r, eval=FALSE}
 library(remotes)
 
 remotes::install_github("flr/FLSRTMB", ref="Depensation")
@@ -55,7 +55,7 @@ library(FLBRP)
 library(ggplotFL)
 library(FLife)
 
-library(FLSRTMB)
+#library(FLSRTMB)
 
 library(ggpubr)
 library(scales) 
