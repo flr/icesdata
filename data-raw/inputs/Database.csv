@@ -1,0 +1,83 @@
+Stock,Species,Common name,Family,Order,WG,Model,Years,Gen,Area
+ank.27.78abd,Lophius budegassa,Black-bellied anglerfish,Lophiidae,Lophiiformes,WGBIE,SS3,1986-2020,10,Irish Sea
+aru.27.5a14,Argentina silus,Greater silver smelt,Argentinidae,Argentiniformes,WGDEEP,Gadget,1990-2019,10,Greenland grounds
+aru.27.5b6a,Argentina silus,Greater silver smelt,Argentinidae,Argentiniformes,WGDEEP,SAM,1995-2020,10,Faroes grounds
+bss.27.4bc7ad-h,Dicentrarchus labrax,Sea bass,Moronidae,Perciformes,WGCSE,SS3,1985-2020,10,North Sea
+bss.27.8ab,Dicentrarchus labrax,Sea bass,Moronidae,Perciformes,WGBIE,SS3,1985-2020,10,Bay of Biscay
+cod.21.1,Gadus morhua,Cod,Gadidae,Gadiformes,NWWG,SAM,1976-2020,9,Greenland grounds
+cod.2127.1f14,Gadus morhua,Cod,Gadidae,Gadiformes,NWWG,SAM,1973-2020,9,Greenland grounds
+cod.27.1-2,Gadus morhua,Cod,Gadidae,Gadiformes,AFWG,SAM,1946-2020,9,Northeast Arctic
+cod.27.1-2coastN,Gadus morhua,Cod,Gadidae,Gadiformes,AFWG,SAM,1994-2020,9,Norwegian Sea
+cod.27.22-24,Gadus morhua,Cod,Gadidae,Gadiformes,WGBFAS,SAM,1985-2020,9,Baltic Sea
+cod.27.24-32,Gadus morhua,Cod,Gadidae,Gadiformes,WGBFAS,SS3,1946-2020,9,Baltic Sea
+cod.27.47d20,Gadus morhua,Cod,Gadidae,Gadiformes,WGNSSK,SAM,1963-2020,9,North Sea
+cod.27.5a,Gadus morhua,Cod,Gadidae,Gadiformes,NWWG,SCAA,1955-2020,9,Greenland grounds
+cod.27.5b1,Gadus morhua,Cod,Gadidae,Gadiformes,NWWG,SAM,1959-2019,9,Faroes grounds
+cod.27.6a,Gadus morhua,Cod,Gadidae,Gadiformes,WGCSE,SAM,1981-2020,9,West of Scotland
+cod.27.7a,Gadus morhua,Cod,Gadidae,Gadiformes,WGCSE,SS3,1968-2021,9,Irish Sea
+cod.27.7e-k,Gadus morhua,Cod,Gadidae,Gadiformes,WGCSE,SAM,1980-2020,9,Celtic Seas
+had.27.1-2,Melanogrammus aeglefinus,Haddock,Gadidae,Gadiformes,AFWG,SAM,1950-2020,7,Northeast Arctic
+had.27.46a20,Melanogrammus aeglefinus,Haddock,Gadidae,Gadiformes,WGNSSK,SAM,1972-2021,7,North Sea
+had.27.5a,Melanogrammus aeglefinus,Haddock,Gadidae,Gadiformes,NWWG,SCAA,1979-2020,7,Greenland grounds
+had.27.5b,Melanogrammus aeglefinus,Haddock,Gadidae,Gadiformes,NWWG,SAM,1957-2019,7,Faroes grounds
+had.27.6b,Melanogrammus aeglefinus,Haddock,Gadidae,Gadiformes,WGCSE,XSA,1991-2020,7,Rockall
+had.27.7a,Melanogrammus aeglefinus,Haddock,Gadidae,Gadiformes,WGCSE,ASAP,1993-2020,7,Irish Sea
+had.27.7b-k,Melanogrammus aeglefinus,Haddock,Gadidae,Gadiformes,WGCSE,SAM,1993-2020,7,Celtic Seas
+her.27.1-24a514a,Clupea harengus,Herring,Clupeidae,Clupeiformes,WGWIDE,XSAM,1988-2020,9,Northeast Atlantic
+her.27.20-24,Clupea harengus,Herring,Clupeidae,Clupeiformes,HAWG,SAM,1991-2020,9,Baltic Sea
+her.27.25-2932,Clupea harengus,Herring,Clupeidae,Clupeiformes,WGBFAS,XSA,1974-2020,9,Baltic Sea
+her.27.28,Clupea harengus,Herring,Clupeidae,Clupeiformes,WGBFAS,XSA,1977-2020,9,Baltic Sea
+her.27.3031,Clupea harengus,Herring,Clupeidae,Clupeiformes,WGBFAS,SS3,1963-2020,9,Baltic Sea
+her.27.3a47d,Clupea harengus,Herring,Clupeidae,Clupeiformes,HAWG,SAM,1947-2020,9,North Sea
+her.27.5a,Clupea harengus,Herring,Clupeidae,Clupeiformes,NWWG,NFT-ADAPT,1987-2020,9,Greenland grounds
+her.27.6a7bc,Clupea harengus,Herring,Clupeidae,Clupeiformes,HAWG,SAM,1957-2020,9,West of Scotland
+her.27.irls,Clupea harengus,Herring,Clupeidae,Clupeiformes,HAWG,ASAP,1958-2020,9,Celtic Seas
+her.27.nirs,Clupea harengus,Herring,Clupeidae,Clupeiformes,HAWG,SAM,1980-2020,9,Irish Sea
+hke.27.3a46-8abd,Merluccius merluccius,Hake,Gadidae,Gadiformes,WGBIE,SS3,1978-2020,9,North Sea
+hke.27.8c9a,Merluccius merluccius,Hake,Gadidae,Gadiformes,WGBIE,SS3,1960-2021,9,Iberian waters
+hom.27.2a4a5b6a7a-ce-k8,Trachurus trachurus,Horse mackerel,Carangidae,Perciformes,WGWIDE,SS3,1982-2020,7,Northeast Atlantic
+hom.27.9a,Trachurus trachurus,Horse mackerel,Carangidae,Perciformes,WGHANSA,AMISH,1992-2019,7,Iberian waters
+ldb.27.8c9a,Lepidorhombus boscii,Megrim,Scophthalmidae,Pleuronectiformes,WGBIE,a4a,1986-2021,8,Bay of Biscay
+lin.27.5a,Molva molva,Ling,Lotidae,Gadiformes,WGDEEP,Gadget,1982-2019,13,Greenland grounds
+lin.27.5b,Molva molva,Ling,Lotidae,Gadiformes,WGDEEP,SAM,1996-2020,13,Faroes grounds
+mac.27.nea,Scomber scombrus,Mackerel,Scombridae,Scombriformes,WGWIDE,SAM,1980-2020,8,Northeast Atlantic
+meg.27.7b-k8abd,Lepidorhombus whiffiagonis,Megrim,Scophthalmidae,Pleuronectiformes,WGBIE,a4a,1984-2021,10,Celtic Seas
+meg.27.8c9a,Lepidorhombus whiffiagonis,Megrim,Scophthalmidae,Pleuronectiformes,WGBIE,a4a,1986-2021,10,Iberian waters
+mon.27.78abd,Lophius piscatorius,White anglerfish,Lophiidae,Lophiiformes,WGBIE,SS3,1950-2020,9,Celtic Seas
+mon.27.8c9a,Lophius piscatorius,White anglerfish,Lophiidae,Lophiiformes,WGBIE,SS3,1980-2020,9,Iberian waters
+pil.27.8abd,Sardina pilchardus,Sardine,Clupeidae,Clupeiformes,WGHANSA,SS3,2002-2019,6,Bay of Biscay
+pil.27.8c9a,Sardina pilchardus,Sardine,Clupeidae,Clupeiformes,WGHANSA,SS3,1978-2019,6,Iberian waters
+ple.27.21-23,Pleuronectes platessa,Plaice,Pleuronectidae,Pleuronectiformes,WGBFAS,SAM,1999-2020,16,North Sea
+ple.27.420,Pleuronectes platessa,Plaice,Pleuronectidae,Pleuronectiformes,WGNSSK,SAM,1957-2020,16,North Sea
+ple.27.7a,Pleuronectes platessa,Plaice,Pleuronectidae,Pleuronectiformes,WGCSE,SAM,1981-2020,16,Irish Sea
+ple.27.7d,Pleuronectes platessa,Plaice,Pleuronectidae,Pleuronectiformes,WGNSSK,AAP,1980-2020,16,English Channel
+pok.27.1-2,Pollachius virens,Saithe,Gadidae,Gadiformes,AFWG,SAM,1960-2020,12,Northeast Arctic
+pok.27.3a46,Pollachius virens,Saithe,Gadidae,Gadiformes,WGNSSK,SAM,1967-2020,12,North Sea
+pok.27.5a,Pollachius virens,Saithe,Gadidae,Gadiformes,NWWG,SCAA,1980-2020,12,Greenland grounds
+pok.27.5b,Pollachius virens,Saithe,Gadidae,Gadiformes,NWWG,SAM,1961-2019,12,Faroes grounds
+pra.27.3a4a,Pandalus borealis,Northern shrimp,Pandalidae,Decapoda,NIPAG,SS3,1970-2020,3,North Sea
+reb.27.1-2,Sebastes mentella,Beaked redfish,Scorpaenidae,Scorpaeniformes,AFWG,SCAA,1992-2019,29,Northeast Arctic
+reg.27.1-2,Sebastes norvegicus,Golden redfish,Scorpaenidae,Scorpaeniformes,AFWG,Gadget,1986-2019,29,Northeast Arctic
+reg.27.561214,Sebastes norvegicus,Golden redfish,Scorpaenidae,Scorpaeniformes,NWWG,Gadget,1970-2019,29,Greenland grounds
+san.sa.1r,Ammodytes marinus,Sandeel,Ammodytidae,Trachiniformes,HAWG,SMS,1983-2020,4,North Sea
+san.sa.2r,Ammodytes marinus,Sandeel,Ammodytidae,Trachiniformes,HAWG,SMS,1983-2020,4,North Sea
+san.sa.3r,Ammodytes marinus,Sandeel,Ammodytidae,Trachiniformes,HAWG,SMS,1986-2020,4,North Sea
+san.sa.4,Ammodytes marinus,Sandeel,Ammodytidae,Trachiniformes,HAWG,SMS,1993-2020,4,North Sea
+sol.27.20-24,Solea solea,Sole,Soleidae,Pleuronectiformes,WGBFAS,SAM,1984-2020,7,North Sea
+sol.27.4,Solea solea,Sole,Soleidae,Pleuronectiformes,WGNSSK,AAP,1957-2020,7,North Sea
+sol.27.7a,Solea solea,Sole,Soleidae,Pleuronectiformes,WGCSE,XSA,1970-2020,7,Irish Sea
+sol.27.7d,Solea solea,Sole,Soleidae,Pleuronectiformes,WGNSSK,SAM,1982-2020,7,English Channel
+sol.27.7e,Solea solea,Sole,Soleidae,Pleuronectiformes,WGCSE,XSA,1969-2020,7,English Channel
+sol.27.7fg,Solea solea,Sole,Soleidae,Pleuronectiformes,WGCSE,SAM,1971-2020,7,Celtic Seas
+sol.27.8ab,Solea solea,Sole,Soleidae,Pleuronectiformes,WGBIE,XSA,1984-2020,7,Celtic Seas
+spr.27.22-32,Sprattus sprattus,Sprat,Clupeidae,Clupeiformes,WGBFAS,XSA,1974-2020,4,Baltic Sea
+spr.27.3a4,Sprattus sprattus,Sprat,Clupeidae,Clupeiformes,HAWG,SMS,1974-2020,4,North Sea
+tur.27.4,Scophthalmus maximus,Turbot,Scophthalmidae,Pleuronectiformes,WGNSSK,SAM,1981-2020,8,North Sea
+usk.27.5a14,Brosme brosme,Tusk,Lotidae,Gadiformes,WGDEEP,Gadget,1982-2019,13,Greenland grounds
+whb.27.1-91214,Micromesistius poutassou,Blue whiting,Gadidae,Gadiformes,WGWIDE,SAM,1981-2020,7,Northeast Atlantic
+whg.27.47d,Merlangius merlangus,Whiting,Gadidae,Gadiformes,WGNSSK,SAM,1978-2020,6,North Sea
+whg.27.6a,Merlangius merlangus,Whiting,Gadidae,Gadiformes,WGCSE,SAM,1981-2020,6,West of Scotland
+whg.27.7a,Merlangius merlangus,Whiting,Gadidae,Gadiformes,WGCSE,ASAP,1980-2020,6,Irish Sea
+whg.27.7b-ce-k,Merlangius merlangus,Whiting,Gadidae,Gadiformes,WGCSE,SAM,1999-2020,6,Celtic Seas
+wit.27.3a47d,Glyptocephalus cynoglossus,Witch,Pleuronectidae,Pleuronectiformes,WGNSSK,SAM,1950-2020,12,North Sea
+anf.27.3a46,Lophius piscatorius,Anglerfish,Lophiidae,Lophiiformes,WGCSE,SS3,1981-2023,10,North Sea

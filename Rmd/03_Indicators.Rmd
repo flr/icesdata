@@ -1,0 +1,360 @@
+---
+title: "ICES Stocks"
+subtitle: "Indicators"
+author: "L Kell"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+mathjax: TRUE
+tags: FLR FLCore introduction
+license: Creative Commons Attribution-ShareAlike 4.0 International Public License
+#bibliography: ../refs.bib
+#knit: (function(inputFile, encoding) {
+#  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outputs/html") })
+---
+
+
+ICES Category 1 stock assessments, analytical age based assessments that have been benchmarked.
+
+```{r, knitr, eval=TRUE, warning=FALSE, cache=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(knitr)
+opts_chunk$set(comment   =NA, 
+               warning   =FALSE, 
+               message   =FALSE, 
+               error     =FALSE, 
+               echo      =FALSE, 
+               eval      =TRUE,
+               cache     =TRUE,
+               cache.path="../cache/indicators/",
+               fig.path  ="../figs/indicators",
+               fig.width =10,
+               fig.height=12,
+               dev       ="png")
+
+iFig=0
+iTab=0
+```
+
+```{r}
+library(plyr)
+library(dplyr)
+library(reshape) 
+library(ggplot2)
+
+library(FLCore)  
+library(FLasher)
+library(FLBRP)
+
+library(ggplotFL)
+library(FLife)
+
+#library(FLSRTMB)
+
+library(ggpubr)
+library(scales) 
+
+library(statcomp)
+library(DescTools)
+
+library(rpart)
+library(rpart.plot)
+```
+  
+  
+```{r, data}
+load("../data-raw/Updated_stks_n82_R0_updated202408.RData")
+load("../data/info.RData")
+load("../data/lw.RData")
+load("../data/eq.RData")
+```
+
+```{r, source}
+source("../source/invALK2.R")
+source("../source/abi.R")
+source("../source/spr0Yr.R")
+source("../source/indicatorsBiol.R")
+source("../source/roc.R")
+```
+
+```{r, lsmpl}
+lsmps=mlply(names(ICESStocks), function(.id,meta=info,fls=ICESStocks){
+
+  try({
+  par=FLPar(a=mean(lw$a),b=mean(lw$b))
+
+  if (info[meta[,".id"]==.id,"Common.name"]%in%lw[,"name"])
+      par =FLPar(lw[meta[meta[,".id"]==.id,"Common.name"]==lw[,"name"],c("a","b")])
+
+  cln =wt2len(catch.wt(fls[[.id]])*1000,par)
+  cln[is.na(cln)]=0
+  iAlk=invALK(cln,bin=0.5)
+  iAlk[is.na(iAlk)]=0
+  catch.n(fls[[.id]])[is.na(catch.n(fls[[.id]]))]=0
+  lenSamp2(catch.n(fls[[.id]]),iAlk,n=500)},silent=TRUE)
+  })
+names(lsmps)=names(ICESStocks)
+
+save(lsmps,file="../data/lsmps.RData")
+```
+
+```{r, indFn}
+indFn<-function(x,y="missing",z="missing"){
+  
+  if (missing(y)){
+    fmsy=FLPar(attributes(x)$benchmark["Fmsy"])
+    bmsy=FLPar(attributes(x)$eqsim["BMSY"])} 
+  else{
+    bmsy=refpts(y)["msy","ssb"]
+    fmsy=refpts(y)["msy","harvest"]}
+  
+  rtn=FLQuants(SSB =ssb( x)%/%bmsy,
+               F   =fbar(x)%/%fmsy,
+               SPR0=spr0Yr(x),
+               #FRatio=fjuv(x[-1])%/%fapex(x[-1]),
+               SPR   =ssb(x)/rec(x),
+               amat  =amat(mat(x),0.5,what="i"),
+               wmat  =wmat(x),
+               POS   =pos(x),
+               ASA   =asa(x),
+               POS_  ={stock.n(x)=catch.n(x); m.spwn(x)=0; pos(x)},
+               ASA_  ={stock.n(x)=catch.n(x); m.spwn(x)=0; asa(x)})
+
+  if (!missing(z)&!"try-error"%in%is(z)) rtn[["lmean"]] = 1/lmean(z)
+  if (!missing(y)) rtn[["ABI"]]   = abi(x,y)
+              
+  model.frame(rtn,drop=T)}
+```
+
+
+```{r, inds}
+inds=mdply(names(ICESStocks),function(.id){
+  cbind(".id"=.id,indFn(ICESStocks[[.id]],eq[[.id]],lsmps[[.id]]))})
+
+save(inds,file="../data/inds.RData")
+```
+
+## ABI
+```{r, ABI}
+ggplot(inds)+
+  geom_line(aes(year,ABI),col="blue")+
+  geom_text(aes(x=1950, y=V1, label=.id), data=ddply(inds,.(.id), with,    
+                                                     median(ABI,na.rm=TRUE)),
+              hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4,)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="ABI",
+       x    ="Year",
+       y    ="")
+```
+
+
+## lmean
+```{r, lmean}
+ggplot(inds)+
+  geom_line(aes(year,lmean),col="blue")+
+  geom_text(aes(x=1950, y=V1, label=.id), data=ddply(inds,.(.id), with,    
+                                                     median(lmean,na.rm=TRUE)),
+              hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4,)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="lmean",
+       x    ="Year",
+       y    ="")
+```
+
+## POS
+```{r, POS}
+ggplot(inds)+
+  geom_line(aes(year,POS), col="blue")+
+  geom_line(aes(year,POS_),col="red")+
+  geom_text(aes(x=1950, y=V1, label=.id), data=ddply(inds,.(.id), with,    
+                                                     median(POS,na.rm=TRUE)),
+              hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4,)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="POS",
+       x    ="Year",
+       y    ="")
+```
+
+
+## ASA
+```{r, ASA}
+ggplot(inds)+
+  geom_line(aes(year,ASA), col="blue")+
+  geom_line(aes(year,ASA_),col="red")+
+  geom_text(aes(x=1950, y=V1, label=.id), data=ddply(inds,.(.id), with,    
+                                                     median(ASA,na.rm=TRUE)),
+              hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4,)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="ASA",
+       x    ="Year",
+       y    ="")
+```
+
+
+## wmat
+```{r, wmat}
+ggplot(inds)+
+  geom_line(aes(year,amat), col="blue")+
+  geom_text(aes(x=1950, y=V1, label=.id), data=ddply(inds,.(.id), with,    
+                                                     median(wmat,na.rm=TRUE)),
+              hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4,)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="Wmat",
+       x    ="Year",
+       y    ="")
+```
+
+
+## amat
+```{r, amat}
+ggplot(inds)+
+  geom_line(aes(year,amat), col="blue")+
+  geom_text(aes(x=1950, y=V1, label=.id), data=ddply(inds,.(.id), with,    
+                                                     median(amat,na.rm=TRUE)),
+              hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4,)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="Amat",
+       x    ="Year",
+       y    ="")
+```
+
+# ROC
+
+## POS ABI
+### AUC  
+```{r, fig.height=5, fig.width=6}
+source("../source/roc.R")
+
+ctc    =ldply(ICESStocks, function(x) as.data.frame(catch(x),drop=TRUE))
+
+stdz<-function(x){
+  x=x-mean(x,na.rm=TRUE)
+  x/var(x,na.rm=TRUE)^0.5}
+
+dt1=ddply(inds,.(.id), transform, POS=stdz(POS),ABI=stdz(ABI))
+dt2=ddply(dt1, .(.id), with, roc(ABI,POS))
+dt3=ddply(dt2, .(.id), with, auc(TPR=TPR,FPR=FPR))
+
+ggplot(merge(dt2,transform(dt3,AUC=V1)))+   
+  geom_line(aes(FPR, TPR, group = .id, col = AUC), alpha=0.5)+
+  geom_abline(aes(intercept=0,slope=1),linetype=2)+   
+  xlab("False Positive Rate (FPR)")+ylab("True Positive Rate (TPR)")+ 
+  scale_colour_gradient2(
+    midpoint=0.75,
+    high=scales::muted("red"), 
+    mid =scales::muted("blue"), 
+    low =scales::muted("blue"))+
+  labs(
+    title = "ROC Curve",
+    color = "AUC", 
+    subtitle = "Performance of classification skill",
+    caption = "Data source: Model predictions and ground truth labels"
+  )+ 
+  xlab("False Positive Rate (1 - Specificity)") +
+  ylab("True Positive Rate (Sensitivity)")+
+  theme_minimal(base_size=12) +
+  theme(
+    plot.title  =element_text(size=14, face="bold"),
+    axis.title  =element_text(size=10),
+    legend.title=element_text(size=10),
+    legend.text =element_text(size= 8))
+```
+
+```{r}
+dt4=ldply(ICESStocks, function(x) unlist(c(attributes(x)$fishlife)))
+dt5=ldply(ICESStocks, function(x) 
+               data.frame(shape=attributes(ICESStocks[[1]])$eqsim[["BMSY"]]/
+                                attributes(ICESStocks[[1]])$eqsim[["B0"]]))
+dt5=merge(dt4,dt5)
+dt5=merge(dt3,dt5)
+dt5=transform(dt5,lmlinf=lm/linf,klinf=k/linf)
+```
+
+```{r}
+tree=rpart(V1~., data=dt5[,c("V1","k","s","sigmaR","lmlinf","klinf","r","g","shape")], 
+           method="anova")
+
+# Get variable importance
+varImp=data.frame(
+  Variable  =names(tree$variable.importance),
+  Importance=tree$variable.importance)
+
+library(ggtext)
+
+var_labels <- c(
+  "k" = "k",
+  "s" = "s",
+  "sigmaR" = "<span style='font-family:serif;'>\u03C3<sub>R</sub></span>",
+  "lmlinf" = "<span style='font-family:serif;'>L<sub>m</sub>:L<sub>\u221E</sub></span>",
+  "klinf" = "<span style='font-family:serif;'>k:L<sub>\u221E</sub></span>",
+  "r" = "r",
+  "g" = "g",
+  "Shape" = "shape"
+)
+
+
+# Assuming varImp is your data frame
+# Update the variable names in the data frame
+varImp$Variable <- var_labels[varImp$Variable]
+
+# Plot variable importance
+p2=ggplot(varImp, aes(x = reorder(Variable, Importance), y = Importance)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  theme_minimal(base_size = 16) +
+  theme(
+    axis.text.y = element_markdown(),
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title = element_text(size = 18),
+    panel.grid.major.y = element_blank()
+  ) +
+  labs(title = "Variable Importance",
+       x = "Variable",
+       y = "Importance") +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, max(varImp$Importance) * 1.1))
+```
+
+\small
+
+## AUC     
+```{r, fig.height=6, fig.width=7, fig.show='hold', out.width='45%',fig.align='default'}
+p2
+
+split.fun<-function(x, labs, digits, varlen, faclen) {
+  labs <- gsub("sigmaR", "\u03C3R", labs)
+  labs}
+
+rpart.plot(tree,split.fun=split.fun)
+
+```
+

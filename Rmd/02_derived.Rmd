@@ -1,0 +1,272 @@
+---
+title: "ICES Stocks"
+subtitle: "Derived Quantities"
+author: "L Kell"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+mathjax: TRUE
+tags: FLR FLCore introduction
+license: Creative Commons Attribution-ShareAlike 4.0 International Public License
+#bibliography: ../refs.bib
+#knit: (function(inputFile, encoding) {
+#  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outputs/html") })
+---
+
+
+ICES Category 1 stock assessments, analytical age based assessments that have been benchmarked.
+
+```{r, knitr, eval=TRUE, warning=FALSE, cache=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(knitr)
+opts_chunk$set(comment   =NA, 
+               warning   =FALSE, 
+               message   =FALSE, 
+               error     =FALSE, 
+               echo      =FALSE, 
+               eval      =TRUE,
+               cache     =TRUE,
+               cache.path="../cache/derived/",
+               fig.path  ="../figs/derived",
+               fig.width =10,
+               fig.height=12,
+               dev       ="png")
+
+iFig=0
+iTab=0
+```
+
+```{r}
+library(remotes)
+
+remotes::install_github("flr/FLSRTMB", ref="Depensation")
+```
+
+```{r}
+library(plyr)
+library(dplyr)
+library(reshape) 
+library(ggplot2)
+
+library(FLCore)  
+library(FLasher)
+library(FLBRP)
+
+library(ggplotFL)
+library(FLife)
+
+library(FLSRTMB)
+
+library(ggpubr)
+library(scales) 
+
+library(statcomp)
+library(DescTools)
+```
+  
+  
+
+```{r, source}
+source("../source/jabba-utils.R")
+source("../source/spr0Yr.R")
+source('../source/nonStationarity.R')
+```
+
+
+```{r, data}
+load("../data-raw/Updated_stks_n82_R0_updated202408.RData")
+load("../data/info.RData")
+load("../data/spp.RData")
+```
+
+
+### Summaries
+
+Biological assumptions and variation by age, and year 
+
+```{r}
+vary=ldply(ICESStocks, function(x) data.frame(
+                    m.age  =!all(m(x)[1,]==apply(m(x),2,mean)),
+                    m.yr   =!all(apply(       m(x),2,mean)==mean(m(       x)[,1])),
+                    mass.yr=!all(apply(stock.wt(x),2,mean)==mean(stock.wt(x)[,1])),
+                    mat.yr =!all(apply(     mat(x),2,mean)==mean(mat(     x)[,1]))))
+vary=transform(vary,m.by.age  =ifelse(m.age,"M varys by Age",     "M constant by Age"),
+                    m.by.yr   =ifelse(m.yr, "M varys by Year",    "M constant by Year"),
+                    mat.by.yr =ifelse(mat.yr, "Mat varys by Year",  "Mat constant by Year"),
+                    mass.by.yr=ifelse(mass.yr, "Mass varys by Year", "Mass constant by Year"))
+
+save(vary,file="../data/vary.RData")
+```
+
+
+### Equilibrium analysis
+
+Take the average values=at-age across all years for each stock, and fit a 
+Beverton and Holt stock recruitment relationship using steepness from `FishBase'
+
+```{r, eq}
+eq=mlply(names(ICESStocks), function(.id) {
+  rtn=try(eqlFn(ICESStocks[[.id]]))
+  
+  if ("try-error"%in%is(rtn)) return(NULL)
+  
+  return(rtn)})
+
+names(eq)=names(ICESStocks)
+save(eq,file="../data/eq.RData")
+```
+
+### Process error
+
+Process error represents the inherent variability in population dynamics that is 
+not accounted for by the model structure. It differs from sampling error, which 
+arises from the data collection process.  However, it can be difficult to consistently 
+identify the correct process error structure. Incorrectly attributing process error to 
+the wrong model component (e.g. natural mortality vs selectivity) can lead to 
+biased estimates and management advice.
+
+
+```{r, pe}
+pe=mdply(names(ICESStocks), function(.id) {  
+    
+  Fn<-function(stk,eq,stock=FLCore:::ssb){
+          (stock(stk)%-%
+          window(stock(stk)[,-1],end=dims(stk)$maxyear+1)-
+          catch(stk)%+%sp(stk,eq,stock))%/%stock(stk)}
+  
+     rtn=try(Fn(ICESStocks[[.id]],eq[[.id]])) 
+     if ("try-error"%in%is(rtn)) return(NULL) else 
+       cbind(.id=.id,as.data.frame(rtn,drop=TRUE))})[,-1]
+
+ggplot(pe)+
+  geom_line(aes(year,data),col="blue")+
+  geom_text(aes(x=1950, y=V1, label=.id), data=ddply(pe,.(.id), with,    
+                                                     median(data,na.rm=TRUE)),
+              hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4,)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="Process Error",
+       x    ="Year",
+       y    ="")
+
+save(pe,file="../data/pe.RData")
+```
+**Figure `r iFig=iFig+1; iFig`** Process error,
+
+
+#### $SPR_{0}$ time series
+
+
+```{r, spr0}
+spr0Par=llply(ICESStocks, function(x) {
+  res=spr0Yr(x)
+  FLPar(array(c(res),dim=c(1,dim(res)[2]),dimnames=list(params="spr0",iter=seq(dim(res)[2]))))})
+
+spr0=ldply(ICESStocks, function(x) as.data.frame(spr0Yr(x),drop=T))  
+
+ggplot(spr0)+
+  geom_line(aes(year,data),col="blue")+
+  geom_text(aes(x=1950, y=V1, label=.id), data=ddply(spr0,.(.id), with,    
+                                                     median(data,na.rm=TRUE)),
+              hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4,)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="SPR0",
+       x    ="Year",
+       y    ="")
+
+save(spr0,spr0Par,file="../data/spr0.RData")
+```
+
+#### SRR
+
+```{r, sr}
+sr=FLSRs(lapply(ICESStocks, function(x) { 
+  srr = as.FLSR(x,model=bevholtSV)
+  
+  res=ftmb(srr,s.est=T,s=x@fishlife["s"],s.logitsd=x@fishlife["sd.logit.s"],spr0=spr0Yr(x))
+  res}))
+names(sr)=names(ICESStocks)
+
+srPar=FLPars(mlply(names(sr), function(x){
+
+  res=spr0Yr(ICESStocks[[x]])
+  res=FLPar(array(c(res),dim=c(1,dim(res)[2]),dimnames=list(params="spr0",iter=seq(dim(res)[2]))))
+  
+  rbind(params(sr[[x]]),res)
+  }))
+names(srPar)=names(ICESStocks)
+
+for (i in seq(length(srPar))) 
+  srPar[[i]]=try(FLCore:::sv(srPar[[i]],model="bevholt"))
+
+save(sr,srPar,file="../data/sr.RData")
+```
+
+```{r, virgin}
+virgin=mdply(names(ICESStocks), function(.id) {
+  cbind(.id=.id,model.frame(srPar[[.id]]),year=unlist(dimnames(spr0Yr(ICESStocks[[.id]]))$year))})[,-c(1,6)]
+virgin$year=as.numeric(virgin$year)
+
+ggplot(virgin)+
+  geom_line(aes(year,v),col="blue")+
+  geom_text(aes(x=1950, y=V1, label=.id), data=ddply(virgin,.(.id), with,    
+                                                     median(v,na.rm=TRUE)),
+             hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="Virgin Biomass",
+       x    ="Year",
+       y    ="")
+
+save(virgin,file="../data/virgin.RData")
+```
+
+\newpage
+
+### Reference Points
+
+```{r, msy-data}
+rf=mdply(names(ICESStocks), function(.id){
+    print(.id)
+    rf=try(cbind(.id=.id,rf=mdply(names(ICESStocks), function(.id){
+    print(.id)
+    rf=cbind(.id=.id,nonStationarity(ICESStocks[[.id]],sr=sr[[.id]]))})))
+    if ("try-error"%in%is(rf)) return(NULL)
+    rf})
+rf=cast(rf,.id+year+refpt~quant,value="data")
+     
+ggplot(subset(rf,refpt=="msy"))+
+  geom_line(aes(year,ssb),col="blue")+
+  geom_text(aes(x=1950, y=V1, label=.id), data=ddply(rf,.(.id), with,    
+                                                     median(ssb,na.rm=TRUE)),
+             hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="BMSY",
+       x    ="Year",
+       y    ="")
+
+save(rf,file="../data/rf.RData")
+```
+
+
+```{r}
+
+```

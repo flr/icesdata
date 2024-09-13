@@ -1,0 +1,352 @@
+---
+title: "ICES Stocks"
+subtitle: "Data Sets"
+author: "L Kell"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+mathjax: TRUE
+tags: FLR FLCore introduction
+license: Creative Commons Attribution-ShareAlike 4.0 International Public License
+#bibliography: ../refs.bib
+#knit: (function(inputFile, encoding) {
+#  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outputs/html") })
+---
+
+
+ICES Category 1 stock assessments, analytical age based assessments that have been benchmarked.
+
+```{r, knitr, eval=TRUE, warning=FALSE, cache=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(knitr)
+opts_chunk$set(comment   =NA, 
+               warning   =FALSE, 
+               message   =FALSE, 
+               error     =FALSE, 
+               echo      =FALSE, 
+               eval      =TRUE,
+               cache     =TRUE,
+               cache.path="../cache/icesStocks/",
+               fig.path  ="../figs/icesStocks",
+               fig.width =10,
+               fig.height=12,
+               dev       ="png")
+
+iFig=0
+iTab=0
+```
+
+```{r}
+library(plyr)
+library(dplyr)
+library(reshape) 
+library(ggplot2)
+
+library(FLCore)  
+library(FLasher)
+library(FLBRP)
+library(ggplotFL)
+library(FLife)
+
+#library(FLSRTMB)
+
+library(ggpubr)
+library(scales) 
+
+library(statcomp)
+library(DescTools)
+```
+
+  
+```{r, eval=!FALSE}
+setwd("C:/active/icesdata/Rmd")  
+```
+
+```{r, source}
+source("../source/jabba-utils.R")
+source("../source/spr0Yr.R")
+source('../source/nonStationarity.R')
+```
+
+
+```{r, data}
+load(         "../data-raw/Updated_stks_n82_R0_updated202408.RData")
+info=read.csv("../data-raw/inputs/Database.csv")[,-9]
+names(info)[1]=".id"
+
+save(info,file="../data/info.RData")
+```
+
+### Meta-data
+
++ **Attributes** `FLStock` objects with atrributes containing ICES benchmarks and `FishLife` lifehistory parameters
++ **info** `data.frame` with ICES stock codes, expert Working Groups and stock assessment method
++ **spp** `data.frame` with ICES stock codes, common and latin names, and expert Working Groups
++ **`lw`** length weight relationships
+
+```{r, spp}
+stock=c("ank.27.78abd", "aru.27.5a14", "aru.27.5b6a", "bss.27.4bc7ad-h", "bss.27.8ab", 
+        "cod.21.1", "cod.2127.1f14", "cod.27.1-2", "cod.27.1-2coastN", "cod.27.22-24", 
+        "cod.27.24-32", "cod.27.47d20", "cod.27.5a", "cod.27.5b1", "cod.27.6a", 
+        "cod.27.7a", "cod.27.7e-k", "had.27.1-2", "had.27.46a20", "had.27.5a", 
+        "had.27.5b", "had.27.6b", "had.27.7a", "had.27.7b-k", "her.27.1-24a514a", 
+        "her.27.20-24", "her.27.25-2932", "her.27.28", "her.27.3031", "her.27.3a47d", 
+        "her.27.5a", "her.27.6a7bc", "her.27.irls", "her.27.nirs", "hke.27.3a46-8abd", 
+        "hke.27.8c9a", "hom.27.2a4a5b6a7a-ce-k8", "hom.27.9a", "ldb.27.8c9a", "lin.27.5a", 
+        "lin.27.5b", "mac.27.nea", "meg.27.7b-k8abd", "meg.27.8c9a", "mon.27.78abd", 
+        "mon.27.8c9a", "pil.27.8abd", "pil.27.8c9a", "ple.27.21-23", "ple.27.420", 
+        "ple.27.7a", "ple.27.7d", "pok.27.1-2", "pok.27.3a46", "pok.27.5a", 
+        "pok.27.5b", "pra.27.3a4a", "reb.27.1-2", "reg.27.1-2", "reg.27.561214", 
+        "san.sa.1r", "san.sa.2r", "san.sa.3r", "san.sa.4", "sol.27.20-24", 
+        "sol.27.4", "sol.27.7a", "sol.27.7d", "sol.27.7e", "sol.27.7fg", 
+        "sol.27.8ab", "spr.27.22-32", "spr.27.3a4", "tur.27.4", "usk.27.5a14", 
+        "whb.27.1-91214", "whg.27.47d", "whg.27.6a", "whg.27.7a", "whg.27.7b-ce-k", 
+        "wit.27.3a47d")
+
+name=c("Anglerfish", "Atlantic redfishes", "Atlantic redfishes", "European seabass", 
+       "European seabass", "Atlantic cod", "Atlantic cod", "Atlantic cod", 
+       "Atlantic cod", "Atlantic cod", "Atlantic cod", "Atlantic cod", 
+       "Atlantic cod", "Atlantic cod", "Atlantic cod", "Atlantic cod", 
+       "Atlantic cod", "Haddock", "Haddock", "Haddock", 
+       "Haddock", "Haddock", "Haddock", "Haddock", "Atlantic herring", 
+       "Atlantic herring", "Atlantic herring", "Atlantic herring", 
+       "Atlantic herring", "Atlantic herring", "Atlantic herring", 
+       "Atlantic herring", "Atlantic herring", "Atlantic herring", 
+       "European hake", "European hake", "Atlantic horse mackerel", 
+       "Atlantic horse mackerel", "Four-spot megrim", "Ling", 
+       "Ling", "Mackerel", "Megrim", "Megrim", "Anglerfish", 
+       "Anglerfish", "European pilchard", "European pilchard", 
+       "European plaice", "European plaice", "European plaice", 
+       "European plaice", "Saithe", "Saithe", "Saithe", 
+       "Saithe", "Northern prawn", "Redfish", "Redfish", "Redfish", 
+       "Sandeel", "Sandeel", "Sandeel", "Sandeel", "Sole", 
+       "Sole", "Sole", "Sole", "Sole", "Sole", 
+       "Sole", "Sprat", "Sprat", "Turbot", "Tusk", 
+       "Blue whiting", "Whiting", "Whiting", "Whiting", "Whiting", 
+       "Witch flounder")
+
+spp=c("Lophius piscatorius", "Sebastes spp.", "Sebastes spp.", "Dicentrarchus labrax", 
+      "Dicentrarchus labrax", "Gadus morhua", "Gadus morhua", "Gadus morhua", 
+      "Gadus morhua", "Gadus morhua", "Gadus morhua", "Gadus morhua", 
+      "Gadus morhua", "Gadus morhua", "Gadus morhua", "Gadus morhua", 
+      "Gadus morhua", "Melanogrammus aeglefinus", "Melanogrammus aeglefinus", "Melanogrammus aeglefinus", 
+      "Melanogrammus aeglefinus", "Melanogrammus aeglefinus", "Melanogrammus aeglefinus", "Melanogrammus aeglefinus", "Clupea harengus", 
+      "Clupea harengus", "Clupea harengus", "Clupea harengus", 
+      "Clupea harengus", "Clupea harengus", "Clupea harengus", 
+      "Clupea harengus", "Clupea harengus", "Clupea harengus", 
+      "Merluccius merluccius", "Merluccius merluccius", "Trachurus trachurus", 
+      "Trachurus trachurus", "Lepidorhombus boscii", "Molva molva", 
+      "Molva molva", "Scomber scombrus", "Lepidorhombus whiffiagonis", 
+      "Lepidorhombus whiffiagonis", "Lophius piscatorius", 
+      "Lophius piscatorius", "Sardina pilchardus", "Sardina pilchardus", 
+      "Pleuronectes platessa", "Pleuronectes platessa", "Pleuronectes platessa", 
+      "Pleuronectes platessa", "Pollachius virens", "Pollachius virens", "Pollachius virens", 
+      "Pollachius virens", "Pandalus borealis", "Sebastes spp.", "Sebastes spp.", "Sebastes spp.", 
+      "Ammodytes spp.", "Ammodytes spp.", "Ammodytes spp.", "Ammodytes spp.", "Solea solea", 
+      "Solea solea", "Solea solea", "Solea solea", "Solea solea", 
+      "Solea solea", "Solea solea", "Sprattus sprattus", 
+      "Sprattus sprattus", "Scophthalmus maximus", "Brosme brosme", 
+      "Micromesistius poutassou", "Merlangius merlangus", "Merlangius merlangus", "Merlangius merlangus", 
+      "Merlangius merlangus", "Glyptocephalus cynoglossus")
+Genus=c("Lophius", "Sebastes", "Sebastes", "Dicentrarchus", 
+        "Dicentrarchus", "Gadus", "Gadus", "Gadus", 
+        "Gadus", "Gadus", "Gadus", "Gadus", 
+        "Gadus", "Gadus", "Gadus", "Gadus", 
+        "Gadus", "Melanogrammus", "Melanogrammus", "Melanogrammus", 
+        "Melanogrammus", "Melanogrammus", "Melanogrammus", "Melanogrammus", "Clupea", 
+        "Clupea", "Clupea", "Clupea", 
+        "Clupea", "Clupea", "Clupea", 
+        "Clupea", "Clupea", "Clupea", 
+        "Merluccius", "Merluccius", "Trachurus", 
+        "Trachurus", "Lepidorhombus", "Molva", 
+        "Molva", "Scomber", "Lepidorhombus", 
+        "Lepidorhombus", "Lophius", 
+        "Lophius", "Sardina", "Sardina", 
+        "Pleuronectes", "Pleuronectes", "Pleuronectes", 
+        "Pleuronectes", "Pollachius", "Pollachius", "Pollachius", 
+        "Pollachius", "Pandalus", "Sebastes", "Sebastes", "Sebastes", 
+        "Ammodytes", "Ammodytes", "Ammodytes", "Ammodytes", "Solea", 
+        "Solea", "Solea", "Solea", "Solea", 
+        "Solea", "Solea", "Sprattus", 
+        "Sprattus", "Scophthalmus", "Brosme", 
+        "Micromesistius", "Merlangius", "Merlangius", "Merlangius", 
+        "Merlangius", "Glyptocephalus")
+spp=data.frame(stock=stock,name=name,spp=spp,Genus=Genus,Species=unlist(strsplit(spp," "))[seq(2,length(spp)*2,2)])
+
+save(spp,file="../data/spp.RData")
+```
+
+
+```{r}
+lw=data.frame(
+    name=c(
+      "Anglerfish","Atlantic redfishes","European seabass","Atlantic cod",
+      "Haddock", "Atlantic herring", "European hake", "Atlantic horse mackerel", 
+      "Four-spot megrim","Ling","Mackerel","Megrim","European pilchard",
+      "European plaice","Saithe","Northern prawn","Redfish","Sandeel", 
+      "Sole","Sprat","Turbot","Tusk", "Blue whiting","Whiting","Witch flounder"),
+    latin=c(
+      "Lophius piscatorius","Sebastes spp.","Dicentrarchus labrax","Gadus morhua", 
+      "Melanogrammus aeglefinus","Clupea harengus","Merluccius merluccius","Trachurus trachurus", 
+      "Lepidorhombus boscii","Molva molva","Scomber scombrus","Lepidorhombus whiffiagonis", 
+      "Sardina pilchardus","Pleuronectes platessa","Pollachius virens","Pandalus borealis", 
+      "Sebastes marinus","Ammodytes spp.","Solea solea","Sprattus sprattus", 
+      "Scophthalmus maximus","Brosme brosme","Micromesistius poutassou","Merlangius merlangus", 
+      "Glyptocephalus cynoglossus"),
+    a=c(0.0045,0.0050,0.0075,0.0061,0.0053,0.0032,0.0048,0.0059,0.0046,0.0038,0.0057,
+          0.0046,0.0059,0.0038,0.0062,0.0015,0.0050,0.0055,0.0042,0.0050,0.0071,0.0060,0.0052,0.0054,0.0043),
+    b=c(3.25,3.10,3.10,3.04,3.15,3.24,3.12,3.08,3.20,3.25,3.10,3.20,3.02,3.20,3.15,2.98,
+        3.10,3.05,3.12,3.10,3.15,3.18,3.10,3.15,3.20),
+    Source=c(
+      "FishBase","FishBase","ResearchGate","FishBase","ScienceDirect","ResearchGate","ResearchGate",
+      "ResearchGate","FishBase","FishBase","FishBase","FishBase","ResearchGate","ScienceDirect",
+      "FishBase","NAFO","FishBase","FishBase", "FishBase","FishBase","FishBase","FishBase","FishBase","FishBase","FishBase"))
+
+save(lw,file="../data/lw.RData")
+```
+
+### Summaries
+
+#### Catch data
+
+
+```{r, catch-ices}
+ctc    =ldply(ICESStocks, function(x) as.data.frame(catch(x),drop=TRUE))
+
+stdz<-function(x){
+  x=x-mean(x,na.rm=TRUE)
+  x/var(x,na.rm=TRUE)^0.5}
+
+ggplot(ddply(ctc,.(.id), transform, catch=stdz(data)))+
+  geom_line(aes(year,catch),col="blue")+
+  geom_text(aes(x=1950, y=2, label=.id), 
+            hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4)+
+  theme_minimal(16)+
+  theme(legend.position="none", 
+        strip.text = element_blank(),
+        axis.text  = element_blank(),
+        axis.ticks = element_blank())+  
+  labs(title="Catch",
+       x    ="Year",
+       y    ="")
+```
+
+**Figure `r iFig=iFig+1; iFig`** ICES catches, these are those estimated by the model if
+a statistical catch-at-age method is used.
+
+
+```{r, catch-1903}
+ctc1903=read.csv("../data-raw/inputs/NorthSea_stocks.csv")[,1:14]
+ctc1903$Discards[is.na(ctc1903$Discards)]=0
+
+ggplot(ddply(ctc1903,.(FishStock), transform, catch=stdz(Catches)))+
+  geom_line(aes(Year,catch),col="blue")+
+  geom_text(aes(x=1900, y=2, label=FishStock), 
+            hjust=0, vjust=1, size=3, color="black") +
+  geom_vline(aes(xintercept=1939),colour="red")+
+  facet_wrap(~FishStock,scale="free_y",ncol=4)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="Catch",
+       x    ="Year",
+       y    ="")
+```
+
+**Figure `r iFig=iFig+1; iFig`** Historical catches, from the ICES historical database
+rather than from the stock assessment data sets.
+
+```{r, catch-summary}
+ctc2=rbind(cbind(What="ICES",ctc),
+           cbind(What="1903",transmute(ctc1903,.id=FishStock,year=Year,
+                                       data=Catches)))
+
+ggplot(ddply(ctc2,.(.id), transform, catch=stdz(data)))+
+  geom_line(aes(year,catch,col=What))+
+  geom_text(aes(x=1900, y=2, label=.id), 
+            hjust=0, vjust=1, size=3, color="black") +
+  geom_vline(aes(xintercept=1939),colour="red")+
+  scale_color_manual(values=c("cyan","blue"))+
+  facet_wrap(~.id,scale="free_y",ncol=4)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="Catch",
+       x    ="Year",
+       y    ="")
+```
+
+**Figure `r iFig=iFig+1; iFig`** Comparison of ICES assessment and historical catches.
+
+```{r, catch-3}
+maxyear=ddply(ctc,.(.id), with, data.frame(maxyear=max(year)))
+ctc2   =merge(ctc2,maxyear,by=".id",all.x=TRUE)
+ctc2   =subset(ctc2,is.na(maxyear)|year<=maxyear)
+
+ctc2$What=factor(ctc2$What,levels=c("ICES","1903"))
+ctc3=ctc2[do.call("order",ctc2[,c(".id","year","What")]),]
+ctc3=ctc3[!duplicated(ctc3[,c(".id","year")]),]
+  
+ggplot(ddply(ctc3,.(.id), transform, catch=stdz(data)))+
+  geom_line(aes(year,catch,col=What))+
+  geom_text(aes(x=1900, y=2, label=.id), 
+            hjust=0, vjust=1, size=3, color="black") +
+  geom_vline(aes(xintercept=1939),colour="red")+
+  scale_color_manual(values=c("blue","cyan"))+
+  facet_wrap(~.id,scale="free_y",ncol=4)+
+  theme_minimal(10)+
+  theme(legend.position="none", 
+        strip.text   = element_blank(),
+        axis.text.y  = element_blank(),
+        axis.ticks.y = element_blank())+  
+  labs(title="Catch",
+       x    ="Year",
+       y    ="")
+```
+
+**Figure `r iFig=iFig+1; iFig`** Updated catch time series.
+
+
+Stocks with missing catch-at-age data
+
+```{r, catch}
+ctcNA=subset(ldply(ICESStocks, function(x) any(is.na(catch.n(x)))),V1)[,1]
+
+ctcNA
+```
+
+### Indices
+
+```{r}
+idx=read.csv("../data-raw/inputs/Stock_indices.csv")[,1:5]
+names(idx)=c(".id","survey","year","data","ages")
+idx$data=an(idx$data)
+
+smry =ddply(idx,  .(.id,survey), with, data.frame(n=length(data)))
+smry2=ddply(smry, .(.id), with, data.frame(n=length(survey)))
+
+save(idx,smry,smry2,file="../data/surveys.RData")
+
+ggplot(ddply(idx,.(survey,.id), transform, index=stdz(data)))+
+  geom_line(aes(year,index,col=survey))+
+  geom_text(aes(x=1950, y=2, label=.id), 
+            hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4)+
+  theme_minimal(16)+
+  theme(legend.position="none", 
+        strip.text = element_blank(),
+        axis.text  = element_blank(),
+        axis.ticks = element_blank())+  
+  labs(title="Indices",
+       x    ="Year",
+       y    ="")
+```
+
+
+**Figure `r iFig=iFig+1; iFig`** Indices of abundance.
+
