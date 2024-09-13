@@ -1,0 +1,9 @@
+Package: icesdata
+Type: Package
+Title: Datasets of ICES age-structured stock assessments
+Version: 0.1
+Date: 2024-09-13
+Author: Who wrote it
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Description: More about what it does (maybe more than one line).
+License: What license is it under?
