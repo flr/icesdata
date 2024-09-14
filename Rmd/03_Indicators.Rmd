@@ -49,7 +49,7 @@ library(FLBRP)
 library(ggplotFL)
 library(FLife)
 
-#library(FLSRTMB)
+library(FLSRTMB)
 
 library(ggpubr)
 library(scales) 

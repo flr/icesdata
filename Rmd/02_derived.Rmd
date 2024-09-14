@@ -55,7 +55,9 @@ library(FLBRP)
 library(ggplotFL)
 library(FLife)
 
-#library(FLSRTMB)
+library(FLCandy)
+
+library(FLSRTMB)
 
 library(ggpubr)
 library(scales) 
@@ -63,7 +65,6 @@ library(scales)
 library(statcomp)
 library(DescTools)
 ```
-  
   
 
 ```{r, source}
@@ -190,6 +191,7 @@ save(spr0,spr0Par,file="../data/spr0.RData")
 
 ```{r, sr}
 sr=FLSRs(lapply(ICESStocks, function(x) { 
+  
   srr = as.FLSR(x,model=bevholtSV)
   
   res=ftmb(srr,s.est=T,s=x@fishlife["s"],s.logitsd=x@fishlife["sd.logit.s"],spr0=spr0Yr(x))
