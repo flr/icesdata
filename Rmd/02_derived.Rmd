@@ -80,7 +80,6 @@ load("../data/info.RData")
 load("../data/spp.RData")
 ```
 
-
 ### Summaries
 
 Biological assumptions and variation by age, and year 
@@ -189,7 +188,7 @@ save(spr0,spr0Par,file="../data/spr0.RData")
 
 #### SRR
 
-```{r, sr}
+```{r, sr, eval=FALSE}
 sr=FLSRs(lapply(ICESStocks, function(x) { 
   
   srr = as.FLSR(x,model=bevholtSV)
@@ -242,14 +241,15 @@ save(virgin,file="../data/virgin.RData")
 
 ```{r, msy-data}
 rf=mdply(names(ICESStocks), function(.id){
-    print(.id)
-    rf=try(cbind(.id=.id,rf=mdply(names(ICESStocks), function(.id){
-    print(.id)
-    rf=cbind(.id=.id,nonStationarity(ICESStocks[[.id]],sr=sr[[.id]]))})))
-    if ("try-error"%in%is(rf)) return(NULL)
-    rf})
+
+    rtn=cbind(.id=.id,nonStationarity(ICESStocks[[.id]],sr=sr[[.id]]))
+    if ("try-error"%in%is(rtn)) return(NULL)
+    rtn})
 rf=cast(rf,.id+year+refpt~quant,value="data")
-     
+```
+
+
+```{r, msy-plot}
 ggplot(subset(rf,refpt=="msy"))+
   geom_line(aes(year,ssb),col="blue")+
   geom_text(aes(x=1950, y=V1, label=.id), data=ddply(rf,.(.id), with,    
