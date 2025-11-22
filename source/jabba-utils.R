@@ -5,73 +5,23 @@ require(FLBRP)
 require(plyr)
 require(dplyr)
 
+source("C:/active/FLCandy/R/OMstats.R")
 
 auxFn<-function(lag=0,obsE=0.3,sigma=TRUE,type="",...){
   
   args=list(...)
   
-  auxilary      =NULL
+  auxilary=NULL
   
   if (length(args)>0)
-    if(names(args)%in%c("z", "f", "ffmsy", "bbmsy", "bk")){
+    if(any(names(args)%in%c("z", "f", "ffmsy", "bbmsy", "bk"))){
       type     =names(args)[names(args)%in%c("z", "f", "ffmsy", "bbmsy", "bk")][1]
       auxilary=args[[type]]}
   
-  list(
-    auxiliary      =auxilary, 
-    auxiliary.type =type,
-    auxiliary.sigma=sigma, # estimated?
-    auxiliary.obsE =obsE,   
-    auxiliary.lag  =lag)    # lag effect between impact and Z pop structure
-}
-
-
-jabFn<-function(catch,prior,index=NULL,model="Pella_m",fix=NULL,...){
-  
-  ## priors
-  r        =unlist(c(prior[,c("r")]))
-  r.prior  =c(r,  0.3)
-
-  psi      =unlist(c(prior[,c("ssb.minyr")]/prior[,c("b0")]))
-  psi.prior=c(psi,0.3)
-  
-  shape    =unlist(c(prior[,c("shape")]))
-  
-  b.prior  =unlist(c(prior[,"ssb.maxyr"]/prior[,"bmsy"]))
-  b.prior  =c(b.prior,1e-6,max(catch$year),"bbmsy") 
-  
-  f.prior  =unlist(c(prior[,"f.maxyr"]/prior[,"fmsy"]))
-  f.prior  =c(f.prior,1e-6,max(catch$year),"ffmsy") 
-  
-  ## auxillary index
-  aux=auxFn(...)
-  
-  args=c(list(scenario  ="",
-              model.type=model,
-              BmsyK     =shape,
-               
-              catch     =catch,
-              cpue      =index,
-               
-              r.prior   =r.prior,
-              psi.prior =psi.prior,
-               
-              verbose   =FALSE),aux)
-  
-  if (!is.null(fix))
-     if (fix=="b") args=c(args,list(b.prior=b.prior)) else
-       if (fix=="f") args=c(args,list(b.prior=f.prior))
-          
-  ## Fit with Catch + Index: Simple Fox with r = Fmsy
-  input=try(do.call("build_jabba", args))
-  
-  if ("try-error"%in%is(input)) return(NULL)
-  
-  fit=try(fit_jabba(input,quickmcmc = T,verbose=F))
-  
-  if ("try-error"%in%is(fit)) return(NULL)
-  
-  list(input=input,fit=fit)}
+  c(args,auxiliary.sigma=sigma, # estimated?
+         auxiliary.obsE =obsE,   
+         auxiliary.lag  =lag)    # lag effect between impact and Z pop structure
+       }
 
 
 hindJabba<-function (jbinput, fit, ni = NULL, nt = NULL, nb = NULL, nc = NULL, 
@@ -158,9 +108,6 @@ hindFn1<-function(catch,prior,index=NULL,model="Pella_m",fix=NULL,...){
   if ("try-error"%in%is(hnd)) return(NULL)
   
   list(input=jbInput,fit=jbFit,hind=hnd)}
-
-
-source("C:/active/FLCandy/R/OMstats.R")
 
 
 benchmarks<-function(x) {
@@ -254,23 +201,6 @@ ldfFn<-function(object){
   
   lfd}
 
-tsFn<-function(x) ldply(names(x), function(.id) { 
-  if (is.null(x[[.id]][["fit"]])) return(NULL)
-  
-  cbind(.id=.id,
-        year=as.numeric(dimnames(x[[.id]][["fit"]][["timeseries"]][,"mu",])[[1]]),
-        as.data.frame(x[[.id]][["fit"]][["timeseries"]][,"mu",]),
-        x[[.id]][["fit"]][["refpts"]][1,c("k","bmsy","fmsy","msy")])})
-
-kbFn<-function(x) ldply(names(x), function(.id) { 
-  if (is.null(x[[.id]][["fit"]])) return(NULL)
-  
-  cbind(.id=.id,
-        x[[.id]][["fit"]]$kobe,
-        x[[.id]][["fit"]]$refpts_posterior,
-        x[[.id]][["fit"]]$pars_posterior)[,-(2:4)]})
-
-
 ldfFn<-function(object){
   
   ak =invALK(iter(par,1),cv=0.1,age=an(dimnames(object)$age),bin=1)
@@ -335,5 +265,130 @@ ggplot(rtn)+geom_point(aes(r.x,K.y))
 }
 
 
+smryFn<-function(x){
+  if ("try-error"%in%is(x)) return(NULL)
+  
+  cbind(year=as.numeric(dimnames(x[["fit"]][["timeseries"]][,"mu",])[[1]]),
+        as.data.frame(x[["fit"]][["timeseries"]][,"mu",]),
+        x[["fit"]][["refpts"]][1,c("k","bmsy","fmsy","msy")])}
 
+kbFn<-function(x) ldply(names(x), function(.id) { 
+  if (is.null(x[["fit"]])) return(NULL)
+  
+  cbind(.id=.id,
+        x[["fit"]]$kobe,
+        x[["fit"]]$refpts_posterior,
+        x[["fit"]]$pars_posterior)[,-(2:4)]})
+
+jabbaRun<-function(perfect,eql,pr="missing"){
+  
+  ts=attributes(eql)$tseries
+  
+  if (missing(pr))
+    pr=attributes(eql)$priors
+  if (is.na(pr["r"])) pr["r"]=0.3
+  
+  catch=ts[, c("year", "catch")]
+  index=transmute(ts, year=year, index=eb)
+  
+  rtn=NULL;kb=NULL;
+  rtnf   =try(jabFn(catch,pr,fit=perfect$fit,fix="f",q_bounds=c(0.25,2)))
+  if (!("try-error"%in%is(rtnf))&!is.null(rtnf)){
+    kb =rbind.fill(kb, cbind(What="fCurrent",kbFn(  rtnf)))
+    rtn=rbind.fill(rtn,cbind(What="fCurrent",smryFn(rtnf)))}
+  
+  rtnb   =try(jabFn(catch,pr,fit=perfect$fit, fix="b",q_bounds=c(0.25,2)))
+  if (!("try-error"%in%is(rtnb))&!is.null(rtnb)){
+    kb =rbind.fill(kb, cbind(What="bCurrent",kbFn(  rtnb)))
+    rtn=rbind.fill(rtn,cbind(What="bCurrent",smryFn(rtnb)))}
+  
+  rtnf2  =try(jabFn(catch,pr,fit=perfect$fit, fix="f",q_bounds=c(0.25,2),pr.sd=1e-2))
+  if (!("try-error"%in%is(rtnf2))&!is.null(rtnf2)){
+    kb =rbind.fill(kb, cbind(What="fCurrentTight",kbFn(  rtnf2)))
+    rtn=rbind.fill(rtn,cbind(What="fCurrentTight",smryFn(rtnf2)))}
+  
+  rtnb2  =try(jabFn(catch,pr,fit=perfect$fit, fix="b",q_bounds=c(0.25,2),pr.sd=1e-2))
+  if (!("try-error"%in%is(rtnb2))&!is.null(rtnb2)){
+    kb =rbind.fill(kb, cbind(What="bCurrentTight",kbFn(  rtnb2)))
+    rtn=rbind.fill(rtn,cbind(What="bCurrentTight",smryFn(rtnb2)))}
+  
+  rtnff  =try(jabFn(catch,pr,fit=perfect$fit,auxIndex=TRUE))
+  if (!("try-error"%in%is(rtnff))&!is.null(rtnff)){
+    kb =rbind.fill(kb, cbind(What="ffmsy",kbFn(  rtnff)))
+    rtn=rbind.fill(rtn,cbind(What="ffmsy",smryFn(rtnff)))}
+  
+  rtnff2 =try(jabFn(catch,pr,fit=perfect$fit,auxIndex=TRUE, trunc=5))
+  if (!("try-error"%in%is(rtnff2))&!is.null(rtnff2)){
+    kb =rbind.fill(kb, cbind(What="ffmsyRecent",kbFn(  rtnff2)))
+    rtn=rbind.fill(rtn,cbind(What="ffmsyRecent",smryFn(rtnff2)))}
+  
+  index[seq(dim(index)[1]-10),"index"]=NA
+  
+  perfect2=try(jabFn(catch,pr,index,                        q_bounds=c(0.25,2)))
+  if (!("try-error"%in%is(perfect2))&!is.null(perfect2)){
+    kb =rbind.fill(kb, cbind(What="perfectRecent",kbFn(  perfect2)))
+    rtn=rbind.fill(rtn,cbind(What="perfectRecent",smryFn(perfect2)))}
+  
+  if (!("try-error"%in%is(perfect)&!is.null(perfect[["fit"]]))){
+    kb =rbind.fill(kb, cbind(What="perfect",kbFn(  perfect["fit"])))
+    rtn=rbind.fill(rtn,cbind(What="perfect",smryFn(perfect["fit"])))}
+  
+  return(list(kobe=kb,tseries=rtn))}
+
+jabFnV2<-function(catch,
+                  pr,       
+                  pr.sd     =pr/pr*0.3,
+                  model     ="Pella_m",
+                  assessment="",  scenario="",
+                  index     =NULL,q_bounds=NULL,
+                  sigma.proc=TRUE,
+                  fix="",...){
+  
+  ## priors
+  r        =unlist(c(pr[c("r")]))
+  psi      =unlist(c(pr[c("ssb.minyr")]/pr["b0"]))
+  if (is.na(psi)) psi=0.9
+  shape    =unlist(c(pr[c("shape")]))
+  r.prior  =c(r,  pr.sd["r"])
+  psi.prior=c(psi,pr.sd["ssb.maxyr"])
+  
+  if (substr(fix,1,1)=="b")  
+    args=list(b.prior=c(pr[,"ssb.maxyr"]/pr[,"bmsy"]), pr.sd["ssb.maxyr"], max(om$year), "bbmsy")
+  if (substr(fix,1,1)=="f")  
+    args=list(b.prior=c(pr[,"ssb.maxyr"]/pr[,"bmsy"]), pr.sd["f.maxyr"],   max(om$year), "ffmsy")
+  
+  if (!is.null(q_bounds))
+    args=list(q_bounds=q_bounds)
+  else
+    args=list()
+  
+  args=c(args,list(
+    scenario  =scenario,
+    assessment=assessment,
+    model.type=model,
+    BmsyK     =shape,
+    
+    catch     =catch,
+    cpue      =index,
+    
+    r.prior   =r.prior,
+    psi.prior =psi.prior,
+    
+    sigma.proc=sigma.proc,
+    verbose   =FALSE))
+  
+  aux =auxFn(...)
+  
+  args=c(args,aux)
+  
+  ## Fit with Catch + Index: Simple Fox with r = Fmsy
+  input=try(do.call("build_jabba", args))
+  
+  if ("try-error"%in%is(input)) return(NULL)
+  
+  fit=try(fit_jabba(input,quickmcmc=T,verbose=F))
+  
+  if ("try-error"%in%is(fit)) return(NULL)
+  
+  list(input=input,fit=fit)}
 

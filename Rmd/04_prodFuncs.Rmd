@@ -1,0 +1,293 @@
+---
+title: "ICES Stocks"
+subtitle: "Production Functions"
+author: 
+  L.T. Kell
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Estimating $F_{MNY}$ for Atlantic Mackerel}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Introduction
+
+
+Data are in the `icesdata` package
+
+```{r, icesdata, eval=FALSE}
+library(icesdata)
+
+data(icesdata)
+```
+
+```{r, knitr, eval=TRUE, echo=FALSE, warning=FALSE, cache=FALSE}
+library(knitr)
+
+opts_chunk$set(comment   =NA, 
+               warning   =FALSE, 
+               message   =FALSE, 
+               error     =FALSE, 
+               echo      =FALSE, 
+               cache     =TRUE, 
+               cache.path="../cache/pFn/",
+               fig.path  ="../figs/pFn",
+               fig.width =8,
+               fig.height=6,
+               dev       ="png")
+
+iFig=0
+iTab=0
+```
+
+```{r, pkgs}
+library(FLCore)
+library(FLBRP)
+library(FLasher)
+library(FLife)
+
+require(ggplot2)
+require(ggpubr)
+require(ggplotFL)
+
+library(GGally)
+library(ggpubr)
+
+library(plyr)
+library(dplyr)
+library(reshape)
+library(kableExtra)
+
+library(foreach)
+library(doParallel)
+
+theme_set(theme_bw(16))
+```
+
+```{r, eval=FALSE}
+setwd("C:/flrpapers/jabba_eval/Rmd")
+```
+
+```{r, source}
+source("../source/jabba-utils.R", echo=TRUE)
+```
+
+```{r, ICES-stocks}
+load("C:/active/icesdata/data/icesdata.RData")
+load("C:/active/icesdata/data/spp.RData")
+```
+
+
+```{r, tseries, echo=TRUE}
+# Use all cores except four
+ncore=detectCores() - 4  
+registerDoParallel(ncore)
+
+stks=names(icesdata)
+
+bevHoltSV=foreach(id=stks, .combine   =list, 
+                         .maxcombine=length(stks), 
+                         .packages  =c("FLCore","FLBRP","plyr","dplyr"),
+                         .export    =c("icesdata","eqlFn")) %dopar% {
+  try(eqlFn(icesdata[[id]], model="bevholtSV"))}
+bevHoltSV=FLBRPs(bevHoltSV)
+names(bevHoltSV)=stks
+save(bevHoltSV,file="../data/bevHoltSV.RData")
+
+bevHolt=foreach(id=stks, .combine   =list, 
+                         .maxcombine=length(stks), 
+                         .packages  =c("FLCore","FLBRP","plyr","dplyr"),
+                         .export    =c("icesdata","eqlFn")) %dopar% {
+  try(eqlFn(icesdata[[id]], model="bevholt"))}
+bevHolt=FLBRPs(bevHolt)
+names(bevHolt)=stks
+save(bevHolt,file="../data/bevHolt.RData")
+
+ricker=foreach(id=stks, .combine   =list, 
+                         .maxcombine=length(stks), 
+                         .packages  =c("FLCore","FLBRP","plyr","dplyr"),
+                         .export    =c("icesdata","eqlFn")) %dopar% {
+  try(eqlFn(icesdata[[id]], model="ricker"))}
+ricker=FLBRPs(ricker)
+names(ricker)=stks
+save(ricker,file="../data/ricker.RData")
+
+stopCluster(ncore)
+```
+
+```{r, catch-ices, fig.height=10, fig.width=8}
+ggplot(ddply(tseries,.(.id), transform, catch=stdz(catch)))+ 
+  geom_line(aes(year,catch),col="blue")+
+  geom_text(aes(x=1950, y=2, label=.id), 
+            hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4)+
+  theme_minimal(16)+
+  theme(legend.position="none", 
+        strip.text = element_blank(),
+        axis.text  = element_blank(),
+        axis.ticks = element_blank())+  
+  labs(title="Catch: Cat 1 stocks", 
+       x    ="Year",
+       y    ="")
+```
+**Figure `r iFig=iFig+1; iFig`** Time series of standardised catches from Cat 1 stocks
+
+
+```{r, ssb-ices, fig.height=10, fig.width=8}
+ggplot(ddply(tseries,.(.id), transform, ssb=stdz(ssb)))+
+  geom_line(aes(year,ssb),col="blue")+
+  geom_text(aes(x=1950, y=2, label=.id), 
+            hjust=0, vjust=1, size=3, color="black")+
+  facet_wrap(~.id,scale="free_y",ncol=4)+
+  theme_minimal(16)+
+  theme(legend.position="none", 
+        strip.text = element_blank(),
+        axis.text  = element_blank(),
+        axis.ticks = element_blank())+  
+  labs(title="SSB: Cat 1 stocks",
+       x    ="Year",
+       y    ="")
+```
+**Figure `r iFig=iFig+1; iFig`** Time series of standardised SSB from Cat 1 stocks
+
+
+```{r, fig.height=8, fig.width=8}
+my_smooth <- function(data,mapping,...){
+  ggplot(data=data,mapping=mapping)+
+  geom_point(...,size=.5)+
+  geom_smooth(...,method="lm",se=FALSE)}
+
+my_density <- function(data,mapping,...){
+  ggplot(data=data,mapping=mapping)+
+  geom_density(...,lwd=1)}
+  
+ggpairs(model.frame(priors[,c("r","fmsy","shape")]),
+  lower = list(continuous = wrap(my_smooth)),
+  diag=list(continuous=wrap(my_density,alpha=0.2)),
+  title = "")+
+  theme(legend.position ="bottom",
+  panel.grid.major =element_blank(),
+  axis.ticks       =element_blank(),
+  axis.text.x      =element_text(angle=-45),
+  axis.text.y      =element_blank(),
+  panel.border     =element_rect(linetype = 1, colour="black", fill=NA))+
+  theme_bw()
+```
+
+**Figure `r iFig=iFig+1; iFig`** Relationships between priors
+
+
+```{r, run-perfect, eval=FALSE}
+# Use all cores except four
+ncore=detectCores() - 4  
+registerDoParallel(ncore)
+
+stks=names(icesdata)[names(icesdata)%in%priors$.id]
+
+perfect=foreach(id=stks, .combine   =list, 
+                         .maxcombine=length(stks), 
+                         .packages  =c("dplyr","JABBA"),
+                         .export    =c("jabFn","tseries","priors")) %dopar% {
+
+    pr=subset(priors,.id==id)           
+    ts=merge(subset(tseries, .id==id),pr, by=".id")
+                                
+    if (is.na(pr["r"])) pr["r"]=0.3
+                                
+    catch=ts[, c("year", "catch")]
+    index=transmute(ts, year=year, index=eb)
+  
+  try(jabFn(catch,pr,index,q_bound=c(0.25,2),pr.sd=c(0.1,0.1),
+            assessment=id,scenario="perfect"))}
+names(perfect)=stks
+
+stopCluster(ncore)
+
+save(perfect,file="../data/results/perfect.RData")
+
+perfectFits=cbind(scen="Perfect",tsFn(perfect))
+perfectFits$year=as.numeric(as.character(perfectFits$year))
+save(perfectFits,file="../data/results/perfectFits.RData")
+
+perfectKobe=cbind(scen="Perfect",kbFn(perfect))
+save(perfectKobe,file="../data/results/perfectKobe.RData")
+```
+
+```{r, plot-perfect, eval=FALSE}
+id=names(perfect)[1]
+jbplot_summary(list("Perfect"=perfect[[id]][[2]]))
+```
+
+
+
+```{r, plot-all, fig.height=10, fig.width=8}
+load("../data/results/perfectFits.RData")
+
+ggplot(perfectFits)+ 
+  geom_line(aes(year,BBmsy),col="red")+ 
+  geom_line(aes(year,ssb/bmsy), col="orange",data=merge(tseries,priors))+
+  geom_hline(aes(yintercept=1.0))+
+  geom_text(aes(x=1980, y=2, label=.id), 
+            hjust=0, vjust=1, size=3, color="black")+
+  facet_wrap(~.id,scale="free",ncol=6)+ 
+  labs(title="B/BMSY",
+       x    ="",
+       y    ="")+ 
+  theme_minimal()+
+  theme(legend.position="bottom",
+        strip.text = element_blank(),
+        axis.text  = element_blank(),
+        axis.ticks = element_blank()) 
+```
+
+**Figure `r iFig=iFig+1; iFig`** Estimates of $B/B_{MSY}$ from JABBA (red) compared with Cat 1 assessments (orange).
+
+
+```{r, plot-kobe, fig.height=10, fig.width=8}
+load("../data/results/perfectKobe.RData")
+
+ggplot(perfectKobe)+
+  geom_histogram(aes(stock))+
+  geom_vline(aes(xintercept=ssb.maxyr/bmsy),data=priors,col="red")+
+  geom_text(aes(x=1,y=500,label=.id), hjust=0, vjust=1, size=3, color="blue")+
+  facet_wrap(~.id,scale="free_y",ncol=6)+ 
+  labs(title="B/BMSY",
+       x    ="",
+       y    ="")+ 
+  theme_minimal()+
+  theme(legend.position="bottom",
+        strip.text = element_blank(),
+        axis.text  = element_blank(),
+        axis.ticks = element_blank())+
+  scale_x_continuous(limits=c(0,2.5))
+```
+
+**Figure `r iFig=iFig+1; iFig`** Estimates of $B/B_{MSY}$ in the final year from JABBA (red) compared with Cat 1 assessments (red).
+
+
+```{r, plot-kobe-harvest, fig.height=10, fig.width=8}
+load("../data/results/perfectKobe.RData")
+
+ggplot(perfectKobe)+
+  geom_histogram(aes(harvest))+
+  geom_vline(aes(xintercept=f.maxyr/fmsy),data=priors,col="red")+
+  geom_text(aes(x=1,y=500,label=.id), hjust=0, vjust=1, size=3, color="blue")+
+  facet_wrap(~.id,scale="free",ncol=6)+ 
+  labs(title="F/FMSY",
+       x    ="",
+       y    ="")+ 
+  theme_minimal()+
+  theme(legend.position="bottom",
+        strip.text = element_blank(),
+        axis.text  = element_blank(),
+        axis.ticks = element_blank()) 
+```
+
+**Figure `r iFig=iFig+1; iFig`** Estimates of $F/F_{MSY}$ in the final year from JABBA (red) compared with Cat 1 assessments (red).

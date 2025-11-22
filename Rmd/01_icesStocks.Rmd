@@ -350,3 +350,51 @@ ggplot(ddply(idx,.(survey,.id), transform, index=stdz(data)))+
 
 **Figure `r iFig=iFig+1; iFig`** Indices of abundance.
 
+## Estimates
+
+
+```{r, ssb-ices}
+ssb    =ldply(ICESStocks, function(x) as.data.frame(ssb(x),drop=TRUE))
+
+stdz<-function(x){
+  x=x-mean(x,na.rm=TRUE)
+  x/var(x,na.rm=TRUE)^0.5}
+
+ggplot(ddply(ssb,.(.id), transform, catch=stdz(data)))+
+  geom_line(aes(year,catch),col="blue")+
+  geom_text(aes(x=1950, y=2, label=.id), 
+            hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4)+
+  theme_minimal(16)+
+  theme(legend.position="none", 
+        strip.text = element_blank(),
+        axis.text  = element_blank(),
+        axis.ticks = element_blank())+  
+  labs(title="SSB",
+       x    ="Year",
+       y    ="")
+```
+
+**Figure `r iFig=iFig+1; iFig`** SSB
+
+
+```{r, f-ices}
+fbar    =ldply(ICESStocks, function(x) as.data.frame(fbar(x),drop=TRUE))
+
+ggplot(ddply(fbar,.(.id), transform, catch=stdz(data)))+
+  geom_line(aes(year,catch),col="blue")+
+  geom_text(aes(x=1950, y=2, label=.id), 
+            hjust=0, vjust=1, size=3, color="black") +
+  facet_wrap(~.id,scale="free_y",ncol=4)+
+  theme_minimal(16)+
+  theme(legend.position="none", 
+        strip.text = element_blank(),
+        axis.text  = element_blank(),
+        axis.ticks = element_blank())+  
+  labs(title="Fbar",
+       x    ="Year",
+       y    ="")
+```
+
+**Figure `r iFig=iFig+1; iFig`** F
+
