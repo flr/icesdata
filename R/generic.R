@@ -97,7 +97,9 @@ setGeneric("crosstest", function(object, ...) {
 #' 
 #' @param object An FLBRP object
 #' @param ratio Ratio of virgin recruitment to use (default 0.3)
+#' @param ... Additional arguments
 #' @return An FLPar object containing Blim reference points
+#' @export
 setGeneric("blim", function(object, ...) standardGeneric("blim"))
 
 

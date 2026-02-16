@@ -1,3 +1,5 @@
+#' @rdname tseries
+#' @export
 setMethod("tseries", signature(object="FLBRPs"), function(object){
   plyr::ldply(object, function(x) model.frame(tseries(x)), .id=NULL)})
 

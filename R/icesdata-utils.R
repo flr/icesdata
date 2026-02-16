@@ -1,3 +1,23 @@
+#' Calculate Exploitable Biomass
+#'
+#' @description
+#' Calculates the exploitable biomass from FLStock or FLBRP objects using selectivity-weighted
+#' catch weights and stock numbers.
+#'
+#' @param object An object of class FLStock or FLBRP
+#'
+#' @return An FLQuant object containing the exploitable biomass time series
+#'
+#' @details
+#' Exploitable biomass is based on weighting catch weights by selectivity normalised 
+#' by peak selectivity, then multiplying by stock numbers and summing across ages
+#'
+#' @examples
+#' \dontrun{
+#' data(ple4)
+#' eb <- ebiomass(ple4)
+#' }
+#' 
 #' @rdname ebiomass
 #' @export
 setMethod("ebiomass", signature(object="FLStock"),
@@ -9,6 +29,8 @@ setMethod("ebiomass", signature(object="FLStock"),
             apply(eb.wt %*% stock.n(object), 2:6, sum)
           }) 
 
+#' @rdname ebiomass
+#' @export
 setMethod("ebiomass", signature(object="FLBRP"),
           function(object) {
             sel   <- harvest(object)
@@ -40,7 +62,6 @@ benchmarksFn <- function(object) {
 }
 
 #' @rdname benchmark
-#' @export
 setMethod("benchmark", signature(object="FLStock"), function(object) {
   if (!("benchmark" %in% names(attributes(object)))) {
     warning("No benchmark attribute found for this FLStock object.")
@@ -52,13 +73,11 @@ setMethod("benchmark", signature(object="FLStock"), function(object) {
 })
 
 #' @rdname benchmark
-#' @export
 setMethod("benchmark", signature(object="FLStocks"), function(object) {
   plyr::ldply(plyr::llply(object, function(x) t(benchmark(x))), plyr::rbind.fill)
 })
 
 #' @rdname benchmark
-#' @export
 setMethod("benchmark", signature(object="FLBRP"), function(object) {
   # For FLBRP objects, extract reference points from refpts slot
   refs <- FLCore::refpts(object)
@@ -95,7 +114,6 @@ fishlifesFn <- function(object) {
 }
 
 #' @rdname fishlife
-#' @export
 setMethod("fishlife", signature(object="FLStock"), function(object) {
   if (!("fishlife" %in% names(attributes(object)))) {
     warning("No fishlife attribute found for this FLStock object.")
@@ -105,7 +123,6 @@ setMethod("fishlife", signature(object="FLStock"), function(object) {
 })
 
 #' @rdname fishlife
-#' @export
 setMethod("fishlife", signature(object="FLStocks"), function(object) {
   plyr::ldply(plyr::llply(object, function(x) t(fishlife(x))), plyr::rbind.fill)
 })
@@ -134,7 +151,6 @@ eqsimFn <- function(object) {
   methods::as(attributes(object)$eqsim[nms],"FLPar")}
 
 #' @rdname eqsim
-#' @export
 setMethod("eqsim", signature(object="FLStock"), function(object) {
   if (!("eqsim" %in% names(attributes(object)))) {
     warning("No eqsim attribute found for this FLStock object.")
@@ -144,7 +160,6 @@ setMethod("eqsim", signature(object="FLStock"), function(object) {
 })
 
 #' @rdname eqsim
-#' @export
 setMethod("eqsim", signature(object="FLStocks"), function(object) {
   plyr::ldply(plyr::llply(object, function(x) t(eqsim(x))), plyr::rbind.fill)
 })
@@ -183,7 +198,6 @@ FLifeParFn <- function(object) {
 }
 
 #' @rdname FLifePar
-#' @export
 setMethod("FLifePar", signature(object="FLStock"), function(object) {
   if (!("fishlife" %in% names(attributes(object)))) {
     warning("No benchmark attribute found for this FLStock object.")
@@ -193,7 +207,6 @@ setMethod("FLifePar", signature(object="FLStock"), function(object) {
 })
 
 #' @rdname FLifePar
-#' @export
 setMethod("FLifePar", signature(object="FLStocks"), function(object) {
   rtn=plyr::ldply(plyr::llply(object, function(x) t(FLifePar(x))), plyr::rbind.fill)
   rtn
@@ -242,6 +255,8 @@ setMethod( 'kobe',  signature(path='FLStock',method="missing"),
                               "blim"    =function(x) ssb(x)%/%benchmark( x)["blim"],
                               "flim"    =function(x) ssb(x)%/%benchmark( x)["flim"])})
            
+#' @rdname kobe
+#' @export
 setMethod( 'kobe',  signature(path='FLBRP',method="missing"), 
            function(path, method, ...){ 
              
@@ -251,6 +266,8 @@ setMethod( 'kobe',  signature(path='FLBRP',method="missing"),
                       "blim"   =function(x) ssb.obs( x)%/%blim(x)["blim","ssb"],
                       "flim"   =function(x) fbar.obs(x)%/%blim(x)["blim","harvest"])})
 
+#' @rdname kobe
+#' @export
 setMethod( 'kobe',signature(path='FLBRP',method="logical"), 
            function(path, method, ...){ 
              
@@ -265,6 +282,19 @@ setMethod( 'kobe',signature(path='FLBRP',method="logical"),
     rtn=subset(reshape2::melt(rtn[,1:10],names(rtn)[1:6]),value==1)[,-8]
     
     return(rtn)})
+#' Calculate Length at Capture
+#' 
+#' @description
+#' Calculates the length at which a specified proportion of individuals are captured.
+#' This is typically used to determine Lc (length at 50% capture) for length-based
+#' stock assessment methods.
+#' 
+#' @param object An FLQuant object containing length-frequency data
+#' @param prob Probability threshold for capture (default: 0.5 for 50% capture)
+#' @param ... Additional arguments
+#' 
+#' @return Numeric value representing length at capture
+#' 
 #' @rdname calcLc
 #' @export
 setMethod("calcLc", signature(object = "FLQuant"),
@@ -283,6 +313,22 @@ setMethod("calcLc", signature(object = "FLQuant"),
             }
           })
 
+#' Check Parameter Variation
+#' 
+#' @description
+#' Determines if biological parameters vary by age and/or year in an FLStock object.
+#' Checks for variation in natural mortality (M), stock weight, and maturity.
+#' 
+#' @param object An FLStock or FLStocks object
+#' @param ... Additional arguments
+#' 
+#' @return A data.frame with logical values indicating variation:
+#'   \item{mAge}{Logical: M varies by age}
+#'   \item{mYr}{Logical: M varies by year}
+#'   \item{massYr}{Logical: Stock weight varies by year}
+#'   \item{matYr}{Logical: Maturity varies by year}
+#'   For FLStocks, also includes .id column
+#' 
 #' @rdname checkVariation
 #' @export
 setMethod("checkVariation", signature(object = "FLStock"),
