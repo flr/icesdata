@@ -22,9 +22,6 @@ FLifePar(object, ...)
 \value{
 An FLPar object
 
-
-Extract FLife Parameters
-
 An FLPar object containing life history parameters
 }
 \description{
