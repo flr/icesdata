@@ -197,8 +197,6 @@ setMethod("benchmark", signature(object="FLStocks"), function(object) {
   ldply(llply(icesdata, function(x) t(benchmark(x))),rbind.fill)
 })
 
-#' Extract FishLife Parameters
-#'
 #' @description
 #' A generic function to extract FishLife parameters from FLStock objects
 #'
@@ -287,8 +285,6 @@ setMethod("eqsim", signature(object="FLStocks"), function(object) {
   ldply(llply(icesdata, function(x) t(eqsim(x))),rbind.fill)
 })
 
-#' Extract FLife Parameters
-#'
 #' @description
 #' A generic function to extract FLife parameters from FLStock objects
 #'

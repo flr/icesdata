@@ -329,8 +329,6 @@ setGeneric("haupt", function(object, pars, lc, lmax, ...) {
 #' @export
 
 
-#' Extract FishLife Parameters
-#'
 #' @description
 #' A generic function to extract FishLife parameters from FLStock objects
 #'
@@ -353,8 +351,6 @@ setGeneric("fishlife", function(object, ...) {
 
 
 
-#' Extract FLife Parameters
-#'
 #' @description
 #' A generic function to extract FLife parameters from FLStock objects
 #'
