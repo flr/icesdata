@@ -6,6 +6,9 @@
 \usage{
 get_vignette_data_dir(subdir = NULL)
 }
+\arguments{
+\item{subdir}{Optional subdirectory within vignettes/data}
+}
 \value{
 Character vector with data directory path, or NULL if not found
 }

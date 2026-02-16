@@ -8,6 +8,8 @@ load_ices_data(filename, subdir = NULL)
 }
 \arguments{
 \item{filename}{Name of the RData file to load (e.g., "icesdata.RData")}
+
+\item{subdir}{Optional subdirectory within vignettes/data}
 }
 \value{
 Logical indicating success
