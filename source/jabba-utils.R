@@ -127,7 +127,6 @@ fishlife2lhPar<-function(x) {
   lhPar(res[c("linf","k","l50","s")])}
 
 priorFn<-function(x,nmin=0:2,nmax=0:2){
-  .
   fmsy     =unlist(c(attributes(x)$benchmark["Fmsy"]))
   bmsy     =unlist(c(attributes(x)$eqsim["BMSY"]))
   b0       =unlist(c(attributes(x)$eqsim["B0"]))
