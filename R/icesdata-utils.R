@@ -2,40 +2,41 @@
 #' @export
 setMethod("ebiomass", signature(object="FLStock"),
           function(object) {
-            sel   = harvest(object)
-            wt    = catch.wt(object) %*% sel %/% fapex(sel)
-            ebWt = qmax(wt, 0.000001)
+            sel   <- harvest(object)
+            wt    <- catch.wt(object) %*% sel %/% fapex(sel)
+            eb.wt <- qmax(wt, 0.000001)
             
-            apply(ebWt %*% stock.n(object), 2:6, sum)
-          })
+            apply(eb.wt %*% stock.n(object), 2:6, sum)
+          }) 
 
 setMethod("ebiomass", signature(object="FLBRP"),
           function(object) {
-            sel   = harvest(object)
-            wt    = catch.wt(object) %*% sel %/% fapex(sel)
-            ebWt = qmax(wt, 0.000001)
+            sel   <- harvest(object)
+            wt    <- catch.wt(object) %*% sel %/% fapex(sel)
+            eb.wt <- qmax(wt, 0.000001)
             
-            apply(ebWt %*% stock.n(object), 2:6, sum)
+            apply(eb.wt %*% stock.n(object), 2:6, sum)
           })
 
 
 #' Internal Function for Benchmark Extraction
 #'
-#' @param x An FLStock object
+#' @param object An FLStock object
 #' @return An FLPar object
+#' @keywords internal
 benchmarksFn <- function(object) {
   if ("logical"%in%is(attributes(object)$benchmark))
-    return(FLPar(fmsy=NA,flim=NA,fpa=NA,blim=NA,bpa=NA,btrigger=NA))
+    return(FLCore::FLPar(fmsy=NA,flim=NA,fpa=NA,blim=NA,bpa=NA,btrigger=NA))
   
   if ("numeric"%in%is(attributes(object)$benchmark))
-    attributes(object)$benchmark=FLPar(attributes(object)$benchmark)
+    attributes(object)$benchmark=FLCore::FLPar(attributes(object)$benchmark)
   
-  names(attributes(object)$benchmark) = tolower(names(attributes(object)$benchmark))
+  names(attributes(object)$benchmark)=tolower(names(attributes(object)$benchmark))
 
-  benchmarkNames = names(attributes(object)$benchmark)[names(attributes(object)$benchmark)%in%
+  nms=names(attributes(object)$benchmark)[names(attributes(object)$benchmark)%in%
                                    c("fmsy","flim","fpa","blim","bpa","btrigger")]
                                  
-  as(attributes(object)$benchmark[benchmarkNames],"FLPar")
+  methods::as(attributes(object)$benchmark[nms],"FLPar")
 }
 
 #' @rdname benchmark
@@ -45,7 +46,7 @@ setMethod("benchmark", signature(object="FLStock"), function(object) {
     warning("No benchmark attribute found for this FLStock object.")
     return(NULL)}
   
-  names(attributes(object)$benchmark) = tolower(names(attributes(object)$benchmark))
+  names(attributes(object)$benchmark)=tolower(names(attributes(object)$benchmark))
 
   benchmarksFn(object)
 })
@@ -53,7 +54,7 @@ setMethod("benchmark", signature(object="FLStock"), function(object) {
 #' @rdname benchmark
 #' @export
 setMethod("benchmark", signature(object="FLStocks"), function(object) {
-  ldply(llply(object, function(x) t(benchmark(x))),rbind.fill)
+  plyr::ldply(plyr::llply(object, function(x) t(benchmark(x))), plyr::rbind.fill)
 })
 
 #' @rdname benchmark
@@ -63,7 +64,7 @@ setMethod("benchmark", signature(object="FLBRP"), function(object) {
   refs <- FLCore::refpts(object)
   
   # Create FLPar with benchmark reference points
-  benchmarkPars = FLPar(
+  benchmark_pars <- FLCore::FLPar(
     fmsy = refs["msy", "harvest"],
     flim = refs["lim", "harvest"],
     fpa = refs["pa", "harvest"],
@@ -73,23 +74,24 @@ setMethod("benchmark", signature(object="FLBRP"), function(object) {
   )
   
   # Remove any NA values
-  benchmarkPars = benchmarkPars[!is.na(benchmarkPars)]
+  benchmark_pars <- benchmark_pars[!is.na(benchmark_pars)]
   
-  return(benchmarkPars)
+  return(benchmark_pars)
 })
 
 #' Internal Function for FishLife Parameter Extraction
 #'
 #' @param object An FLStock object
 #' @return An FLPar object
+#' @keywords internal
 fishlifesFn <- function(object) {
   if ("logical"%in%is(attributes(object)$fishlife))
-    return(FLPar(Fmsy=NA,Flim=NA,Fpa=NA,Blim=NA,Bpa=NA,Btrigger=NA))
+    return(FLCore::FLPar(Fmsy=NA,Flim=NA,Fpa=NA,Blim=NA,Bpa=NA,Btrigger=NA))
   
   if ("numeric"%in%is(attributes(object)$fishlife))
-    attributes(object)$fishlife=FLPar(attributes(object)$fishlife)
+    attributes(object)$fishlife=FLCore::FLPar(attributes(object)$fishlife)
   
-  as(attributes(object)$fishlife,"FLPar")
+  methods::as(attributes(object)$fishlife,"FLPar")
 }
 
 #' @rdname fishlife
@@ -105,7 +107,7 @@ setMethod("fishlife", signature(object="FLStock"), function(object) {
 #' @rdname fishlife
 #' @export
 setMethod("fishlife", signature(object="FLStocks"), function(object) {
-  ldply(llply(icesdata, function(x) t(fishlife(x))),rbind.fill)
+  plyr::ldply(plyr::llply(object, function(x) t(fishlife(x))), plyr::rbind.fill)
 })
 
 
@@ -113,22 +115,23 @@ setMethod("fishlife", signature(object="FLStocks"), function(object) {
 #'
 #' @param object An FLStock object
 #' @return An FLPar object
+#' @keywords internal
 eqsimFn <- function(object) {
   if ("logical"%in%is(attributes(object)$eqsim))
-    return(FLPar(catchequi=NA,bmsy=NA,b0=NA,fmsyMedianC=NA,fmsyMedianL=NA,f5percRiskBlim=NA,flimEqsim=NA,r0=NA)) 
+    return(FLCore::FLPar(catchequi=NA,bmsy=NA,b0=NA,fmsyMedianC=NA,fmsyMedianL=NA,f5percRiskBlim=NA,flimEqsim=NA,r0=NA)) 
   
   if ("numeric"%in%is(attributes(object)$eqsim))
-    attributes(object)$eqsim=FLPar(attributes(object)$eqsim)
+    attributes(object)$eqsim=FLCore::FLPar(attributes(object)$eqsim)
   
-  names(attributes(object)$eqsim)=str_c(tolower(str_sub(names(attributes(object)$eqsim), 1, 1)), 
-                                           str_sub(names(attributes(object)$eqsim), 2))
+  names(attributes(object)$eqsim)=stringr::str_c(tolower(stringr::str_sub(names(attributes(object)$eqsim), 1, 1)), 
+                                           stringr::str_sub(names(attributes(object)$eqsim), 2))
 
-  names(attributes(object)$eqsim)=str_replace_all(names(attributes(object)$eqsim), "MSY", "msy")
+  names(attributes(object)$eqsim)=stringr::str_replace_all(names(attributes(object)$eqsim), "MSY", "msy")
   
   nms=names(attributes(object)$eqsim)[names(attributes(object)$eqsim)%in%
     c("catchequi","bmsy","b0","fmsyMedianC","fmsyMedianL","f5percRiskBlim","flimEqsim","r0")]
 
-  as(attributes(object)$eqsim[nms],"FLPar")}
+  methods::as(attributes(object)$eqsim[nms],"FLPar")}
 
 #' @rdname eqsim
 #' @export
@@ -143,24 +146,25 @@ setMethod("eqsim", signature(object="FLStock"), function(object) {
 #' @rdname eqsim
 #' @export
 setMethod("eqsim", signature(object="FLStocks"), function(object) {
-  ldply(llply(icesdata, function(x) t(eqsim(x))),rbind.fill)
+  plyr::ldply(plyr::llply(object, function(x) t(eqsim(x))), plyr::rbind.fill)
 })
 
 #' Internal Function for FLife Parameter Extraction
 #'
 #' @param object An FLStock object
 #' @return An FLPar object with life history parameters
+#' @keywords internal
 FLifeParFn <- function(object) {
   res=attributes(object)$fishlife
   
   if (!("fishlife"%in%names(attributes(object))))
-    return(lhPar(FLPar(c("linf"=NA,"k"=NA,"l50"=NA,"s"=NA))))
+    return(FLife::lhPar(FLCore::FLPar(c("linf"=NA,"k"=NA,"l50"=NA,"s"=NA))))
   
   if ("lm"%in%names(res))
-    names(res)[seq(length(res))[(names(res)=="lm")]]="l50"
+    names(res)[seq_along(res)[(names(res)=="lm")]]="l50"
   
-  res=FLPar(res,units="NA")
-  rtn=FLPar("linf"     =NA,
+  res=FLCore::FLPar(res,units="NA")
+  rtn=FLCore::FLPar("linf"     =NA,
             "k"        =NA,       
             "winf"     =NA,       
             "tmax"     =NA,       
@@ -175,7 +179,7 @@ FLifeParFn <- function(object) {
             "g"         =NA,     
             "sd.logit.s"=NA)
   
-  lhPar(res[c("linf","k","l50","s")])
+  FLife::lhPar(res[c("linf","k","l50","s")])
 }
 
 #' @rdname FLifePar
@@ -191,7 +195,7 @@ setMethod("FLifePar", signature(object="FLStock"), function(object) {
 #' @rdname FLifePar
 #' @export
 setMethod("FLifePar", signature(object="FLStocks"), function(object) {
-  rtn=ldply(llply(object, function(x) t(FLifePar(x))),rbind.fill)
+  rtn=plyr::ldply(plyr::llply(object, function(x) t(FLifePar(x))), plyr::rbind.fill)
   rtn
 })
 
@@ -228,10 +232,8 @@ setMethod("FLifePar", signature(object="FLStocks"), function(object) {
 #' 
 #' @seealso 
 #' \code{\link[FLCore]{FLStock}}, \code{\link[FLCore]{FLQuants}}
-#' 
-#' @references 
 setMethod( 'kobe',  signature(path='FLStock',method="missing"), 
-           function(path,method){ 
+           function(path, method, ...){ 
                names(attributes(path)$eqsim)    =tolower(names(attributes(path)$eqsim))
                names(attributes(path)$benchmark)=tolower(names(attributes(path)$benchmark))
                
@@ -241,7 +243,7 @@ setMethod( 'kobe',  signature(path='FLStock',method="missing"),
                               "flim"    =function(x) ssb(x)%/%benchmark( x)["flim"])})
            
 setMethod( 'kobe',  signature(path='FLBRP',method="missing"), 
-           function(path,method){ 
+           function(path, method, ...){ 
              
              FLQuants(path, 
                       "stock"  =function(x) ssb.obs( x)%/%refpts(x)["msy","ssb"],
@@ -250,7 +252,7 @@ setMethod( 'kobe',  signature(path='FLBRP',method="missing"),
                       "flim"   =function(x) fbar.obs(x)%/%blim(x)["blim","harvest"])})
 
 setMethod( 'kobe',signature(path='FLBRP',method="logical"), 
-           function(path,method){ 
+           function(path, method, ...){ 
              
     kb =kobe(path)
     rtn=FLQuants(green      =as.FLQuant(kb$stock>=1&kb$harvest<=1),
@@ -260,8 +262,50 @@ setMethod( 'kobe',signature(path='FLBRP',method="logical"),
                  overfished =as.FLQuant(kb$stock< 1),
                  overfishing=as.FLQuant(kb$harvest<=1))
     rtn=model.frame(rtn)
-    rtn=subset(melt(rtn[,1:10],names(rtn)[1:6]),value==1)[,-8]
+    rtn=subset(reshape2::melt(rtn[,1:10],names(rtn)[1:6]),value==1)[,-8]
     
     return(rtn)})
-    
+#' @rdname calcLc
+#' @export
+setMethod("calcLc", signature(object = "FLQuant"),
+          function(object, prob = 0.5) {
+            dat = subset(as.data.frame(object), data > 0)
+            if (nrow(dat) == 0) return(NA)
+            
+            dat = plyr::ddply(dat, .(len), with, cumsum(sum(data)) / sum(data))
+            dat$V1 = cumsum(dat$V1) / sum(dat$V1)
+            
+            idx = which(abs(dat$V1 - prob) == min(abs(dat$V1 - prob)))
+            if (length(idx) > 0) {
+              dat[idx[1], "len"]
+            } else {
+              NA
+            }
+          })
+
+#' @rdname checkVariation
+#' @export
+setMethod("checkVariation", signature(object = "FLStock"),
+          function(object) {
+            mData = m(object)
+            wtData = stock.wt(object)
+            matData = mat(object)
+            
+            data.frame(
+              mAge = !all(mData[1, ] == apply(mData, 2, mean)),
+              mYr = !all(apply(mData, 2, mean) == mean(mData[, 1])),
+              massYr = !all(apply(wtData, 2, mean) == mean(wtData[, 1])),
+              matYr = !all(apply(matData, 2, mean) == mean(matData[, 1]))
+            )
+          })
+
+#' @rdname checkVariation
+#' @export
+setMethod("checkVariation", signature(object = "FLStocks"),
+          function(object) {
+            result = plyr::ldply(object, checkVariation)
+            names(result)[1] = ".id"
+            result
+          })
+
     
