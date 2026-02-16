@@ -12,7 +12,6 @@ license: Creative Commons Attribution-ShareAlike 4.0 International Public Licens
 #  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outputs/html") })
 ---
 
-
 ICES Category 1 stock assessments, analytical age based assessments that have been benchmarked.
 
 ```{r, knitr, eval=TRUE, warning=FALSE, cache=FALSE, echo=FALSE}
