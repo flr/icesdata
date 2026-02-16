@@ -115,7 +115,7 @@ setMethod("fishlife", signature(object="FLStocks"), function(object) {
 #' @return An FLPar object
 eqsimFn <- function(object) {
   if ("logical"%in%is(attributes(object)$eqsim))
-    return(FLPar(catchequi=NA,bmsy=NA,b0=NA,fmsyMedianC=NA,fmsyMedianL=NA,f5percRiskBlim=NA,flimEqsim=NA,r0)) 
+    return(FLPar(catchequi=NA,bmsy=NA,b0=NA,fmsyMedianC=NA,fmsyMedianL=NA,f5percRiskBlim=NA,flimEqsim=NA,r0=NA)) 
   
   if ("numeric"%in%is(attributes(object)$eqsim))
     attributes(object)$eqsim=FLPar(attributes(object)$eqsim)
