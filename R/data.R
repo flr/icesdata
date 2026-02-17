@@ -93,3 +93,24 @@
 #' }
 "lw"
 
+#' ICES Historical Catch Data (1903 onwards)
+#'
+#' Historical catch data for ICES stocks starting from 1903.
+#' Contains catch time series for multiple stocks.
+#'
+#' @format A data frame with 9292 observations and 3 variables:
+#'   \itemize{
+#'     \item .id - Stock identifier (character)
+#'     \item year - Year (integer, starting from 1903)
+#'     \item catch - Catch values (integer)
+#'   }
+#' @source ICES Working Group on Stock Assessment Methods
+#' @usage 
+#' data(ctc1903)
+#' @examples
+#' \dontrun{
+#' data(ctc1903)
+#' head(ctc1903)
+#' summary(ctc1903)
+#' }
+"ctc1903"
