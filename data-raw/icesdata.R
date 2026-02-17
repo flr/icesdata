@@ -25,3 +25,9 @@ for (san in c("san.sa.1r","san.sa.2r","san.sa.3r","san.sa.4"))
     x})
 
 save(icesdata,file="C:/active/flr/icesdata/data/icesdata.Rdata")
+
+ctc1903=read.csv("C:/active/flr/icesdata/data-raw/inputs/NorthSea_stocks.csv")[,1:12] 
+ctc1903$Discards[is.na(ctc1903$Discards)]=0
+names(ctc1903)[c(3:4,6)]=c(".id","year","catch")
+names(ctc1903)=tolower(names(ctc1903))
+save(ctc1903,file="C:/active/flr/icesdata/data/ctc1903")
