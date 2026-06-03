@@ -23,32 +23,86 @@ vonB <- function(stk) {
   stats::coef(fit)
 }
 
-#' Age at 50% maturity by year via linear interpolation
+#' Age at which an age-specific vector reaches a target (linear interpolation)
 #'
-#' Computes, per year, the age where maturity crosses 0.5 using linear
-#' interpolation between adjacent ages.
+#' Canonical interpolation used by \code{\link{mat50}}, \code{\link{sel50}},
+#' and \code{\link{findAge}}. Sorts by \code{age}, finds the first bracket where
+#' \code{value} crosses \code{target}, and linearly interpolates. Returns
+#' \code{NA} if the target is not bracketed (no extrapolation).
 #'
-#' @param stk An FLStock object
-#' @return A numeric vector named by year
+#' @param value Numeric vector (e.g. maturity or selectivity).
+#' @param age Numeric vector of ages (same length as \code{value}).
+#' @param target Level to interpolate (default 0.5).
+#' @return Numeric age, or \code{NA_real_}.
 #' @export
-mat50 <- function(stk) {
-  md <- as.data.frame(FLCore::mat(stk))
-  md <- md[is.finite(md$data), ]
-  md$age <- as.numeric(as.character(md$age))
-
-  fn <- function(df) {
-    df <- df[order(df$age), ]
-    if (any(abs(df$data - 0.5) < 1e-6))
-      return(df$age[which.min(abs(df$data - 0.5))])
-    i <- which(df$data > 0.5)[1]
-    if (is.na(i) || i == 1) return(NA_real_)
-    x1 <- df$age[i - 1]; y1 <- df$data[i - 1]
-    x2 <- df$age[i];     y2 <- df$data[i]
-    x1 + (0.5 - y1) * (x2 - x1) / (y2 - y1)
+ageAtTarget <- function(value, age, target = 0.5) {
+  ok <- is.finite(value) & is.finite(age)
+  value <- value[ok]
+  age <- age[ok]
+  if (!length(value)) {
+    return(NA_real_)
   }
+  ord <- order(age)
+  age <- age[ord]
+  value <- value[ord]
+  if (any(abs(value - target) < 1e-8, na.rm = TRUE)) {
+    return(age[which.min(abs(value - target))])
+  }
+  i <- which(value > target)[1]
+  if (is.na(i) || i == 1L) {
+    return(NA_real_)
+  }
+  x1 <- age[i - 1L]
+  y1 <- value[i - 1L]
+  x2 <- age[i]
+  y2 <- value[i]
+  x1 + (target - y1) * (x2 - x1) / (y2 - y1)
+}
 
+#' Age at 50% maturity by year
+#'
+#' Applies \code{\link{ageAtTarget}} to the \code{mat} slot, one value per year.
+#'
+#' @param stk An FLStock object.
+#' @param target Maturity level (default 0.5).
+#' @return Numeric vector named by year.
+#' @seealso \code{\link{sel50}}, \code{\link{findAge}}, \code{\link{ageAtTarget}}
+#' @export
+mat50 <- function(stk, target = 0.5) {
+  md <- as.data.frame(FLCore::mat(stk))
+  md <- md[is.finite(md$data), , drop = FALSE]
+  md$age <- as.numeric(as.character(md$age))
   split_y <- split(md, md$year)
-  sapply(split_y, fn)
+  vapply(
+    split_y,
+    function(df) ageAtTarget(df$data, df$age, target = target),
+    numeric(1)
+  )
+}
+
+#' Age at 50% selectivity by year
+#'
+#' Normalises \code{catch.sel} to its maximum each year, then applies
+#' \code{\link{ageAtTarget}}.
+#'
+#' @param stk An FLStock object.
+#' @param target Selectivity level (default 0.5).
+#' @return Numeric vector named by year.
+#' @seealso \code{\link{mat50}}, \code{\link{ageAtTarget}}
+#' @export
+sel50 <- function(stk, target = 0.5) {
+  sel <- as.data.frame(FLCore::catch.sel(stk))
+  sel <- sel[is.finite(sel$data), , drop = FALSE]
+  sel$age <- as.numeric(as.character(sel$age))
+  split_y <- split(sel, sel$year)
+  vapply(
+    split_y,
+    function(df) {
+      v <- df$data / max(df$data, na.rm = TRUE)
+      ageAtTarget(v, df$age, target = target)
+    },
+    numeric(1)
+  )
 }
 
 #' Log-linear mortality ~ weight relationship

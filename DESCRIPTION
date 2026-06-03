@@ -15,15 +15,15 @@ RoxygenNote: 7.3.3
 Depends: 
     R (>= 4.0.0)
 Imports: 
+    dplyr,
+    ggplot2,
     methods,
+    plyr,
     stats,
     utils
 Suggests: 
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
-    ggplot2,
-    dplyr,
-    tidyr,
-    plyr
+    tidyr
 VignetteBuilder: knitr

@@ -2,17 +2,21 @@
 % Please edit documentation in R/generic-helpers.R
 \name{mat50}
 \alias{mat50}
-\title{Age at 50% maturity by year via linear interpolation}
+\title{Age at 50% maturity by year}
 \usage{
-mat50(stk)
+mat50(stk, target = 0.5)
 }
 \arguments{
-\item{stk}{An FLStock object}
+\item{stk}{An FLStock object.}
+
+\item{target}{Maturity level (default 0.5).}
 }
 \value{
-A numeric vector named by year
+Numeric vector named by year.
 }
 \description{
-Computes, per year, the age where maturity crosses 0.5 using linear
-interpolation between adjacent ages.
+Applies \code{\link{ageAtTarget}} to the \code{mat} slot, one value per year.
+}
+\seealso{
+\code{\link{sel50}}, \code{\link{findAge}}, \code{\link{ageAtTarget}}
 }
