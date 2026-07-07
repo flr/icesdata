@@ -5,7 +5,7 @@ require(FLBRP)
 require(plyr)
 require(dplyr)
 
-source("C:/active/FLCandy/R/OMstats.R")
+source("C:/active/flr/FLCandy/R/OMstats.R")
 
 auxFn<-function(lag=0,obsE=0.3,sigma=TRUE,type="",...){
   
