@@ -407,6 +407,20 @@ setGeneric("benchmark", function(object, ...) {
   standardGeneric("benchmark")
 })
 
+#' Attach ICES SAG benchmarks to an object
+#'
+#' Fetches (or accepts) SAG reference points and stores them on
+#' \code{attributes(object)$benchmark} in the form expected by
+#' \code{\link{benchmark}}.
+#'
+#' @param object An \code{FLStock}, \code{FLStocks}, or \code{FLBRP}
+#' @param ... Passed to methods (\code{sid}, \code{year}, \code{yearBack},
+#'   \code{root}, \code{rfpts}, \code{quiet})
+#' @return \code{object} with \code{benchmark} attribute set
+#' @export
+setGeneric("addBenchmark", function(object, ...) {
+  standardGeneric("addBenchmark")
+})
 
 
 #' Inverse Age-Length Key
@@ -671,6 +685,13 @@ setGeneric("priors", function(object, ...) {
 #'
 #' @export
 setGeneric('leslie', function(object, fec, ...) standardGeneric('leslie'))
+
+#' Life-history and demographic covariates
+#'
+#' @param object An \code{FLBRP} or \code{FLBRPs}
+#' @param ... Additional arguments (\code{fbar}, \code{model})
+#' @export
+setGeneric("covarFn", function(object, ...) standardGeneric("covarFn"))
 
 #' Plot Length Frequency Data
 #'

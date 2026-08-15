@@ -76,13 +76,13 @@ nonStationarity<-function(object,sr,slots=c("m","mat","stock.wt","catch.wt","cat
   refpts(eq)=rbind(refpts(eq),refpts(eq)[1,])
   dimnames(refpts(eq))$refpt[dim(refpts(eq))[1]]="current"
   refpts(eq)["current"]=NA
-  refpts(eq)["current","ssb"]=c(iter(ssb.obs(eq),1))
+  refpts(eq)["current","ssb"]=c(FLCore::iter(ssb.obs(eq),1))
   
   if(abi)
     return(FLQuant(c(abiMsy(eq)),dimnames=dimnames(fbar(object))))
     
   rtn=rbind(computeRefpts(eq),
-            properties(eq))
+            FLBRP::properties(eq))
   
   rtn=rtn[!duplicated(dimnames(rtn)[[1]])]
   rtn=rtn[,apply(rtn,2,function(x) all(is.na(x)))==0]
