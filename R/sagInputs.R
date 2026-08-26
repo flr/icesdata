@@ -125,18 +125,21 @@ loadSagRefpts <- function(sid, year = as.integer(format(Sys.Date(), "%Y")),
 
 #' Read advice.csv into an FLQuants keyed by sid.
 #'
-#' Prefers local \code{data/advice/advice.csv}, else the packaged copy under
-#' \code{inst/extdata/advice.csv}. When \code{sid} is supplied, only matching
-#' rows are loaded (never silently returns unmatched stocks).
+#' The advice bridge is an application artefact: pass an explicit
+#' \code{adviceFile}. No project paths are inferred. When \code{sid} is
+#' supplied, only matching rows are loaded.
 #'
-#' @param adviceFile Path to advice CSV (wide year columns).
+#' @param adviceFile Path to advice CSV (wide year columns). Required.
 #' @param sid Optional character vector of stock ids to keep. \code{NULL}
 #'   loads every row in the CSV.
 #' @return \code{FLQuants} of advice catch by stock (empty if none match).
 #' @export
-loadAdviceFlqs <- function(adviceFile = NULL, sid = NULL) {
-  if (is.null(adviceFile))
-    adviceFile = shippedAdvicePath(defaultProjectRoot())
+loadAdviceFlqs <- function(adviceFile, sid = NULL) {
+  if (missing(adviceFile) || is.null(adviceFile) || !nzchar(adviceFile))
+    stop("loadAdviceFlqs: pass adviceFile = path to advice.csv ",
+         "(no project-root fallback).", call. = FALSE)
+  if (!file.exists(adviceFile))
+    stop("loadAdviceFlqs: file not found: ", adviceFile, call. = FALSE)
   wide = read.csv(adviceFile, stringsAsFactors = FALSE)
   if (!is.null(sid)) {
     sid = unique(as.character(sid))
@@ -335,9 +338,9 @@ rbindFill <- function(dfs) {
 #' unique(mac$ts$sid)
 #' utils::tail(mac$ts, 5)
 #'
-#' # catch bridge is separate
-#' advice = loadAdviceFlqs(sid = unique(mac$ts$sid))
-#'
+#' catch bridge is separate — pass an explicit file
+#' advice = loadAdviceFlqs("data/advice/advice.csv",
+#'                         sid = unique(mac$ts$sid))
 #' requested = bimSids()$sid
 #' all = getSAG(requested)
 #' # mixed assessment years are possible when year = NULL and yearBack > 0

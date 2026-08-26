@@ -4,10 +4,10 @@
 \alias{loadAdviceFlqs}
 \title{Read advice.csv into an FLQuants keyed by sid.}
 \usage{
-loadAdviceFlqs(adviceFile = NULL, sid = NULL)
+loadAdviceFlqs(adviceFile, sid = NULL)
 }
 \arguments{
-\item{adviceFile}{Path to advice CSV (wide year columns).}
+\item{adviceFile}{Path to advice CSV (wide year columns). Required.}
 
 \item{sid}{Optional character vector of stock ids to keep. \code{NULL}
 loads every row in the CSV.}
@@ -16,7 +16,7 @@ loads every row in the CSV.}
 \code{FLQuants} of advice catch by stock (empty if none match).
 }
 \description{
-Prefers local \code{data/advice/advice.csv}, else the packaged copy under
-\code{inst/extdata/advice.csv}. When \code{sid} is supplied, only matching
-rows are loaded (never silently returns unmatched stocks).
+The advice bridge is an application artefact: pass an explicit
+\code{adviceFile}. No project paths are inferred. When \code{sid} is
+supplied, only matching rows are loaded.
 }

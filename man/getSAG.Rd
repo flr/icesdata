@@ -4,7 +4,7 @@
 \alias{getSAG}
 \title{Load SAG time series and reference points for given stock ids.}
 \usage{
-getSAG(sid = NULL, year = NULL, yearBack = 0L, quiet = FALSE)
+getSAG(sid = NULL, year = NULL, yearBack = 0L, quiet = FALSE, root = NULL)
 }
 \arguments{
 \item{sid}{Character vector of ICES FishStock codes. Default
@@ -22,6 +22,10 @@ Default \code{0} (current calendar year only). Ignored when
 
 \item{quiet}{If \code{TRUE}, suppress SAG download messages/warnings
 (for knitted reports).}
+
+\item{root}{Optional path to a local \code{sdGraphs} directory. Used for
+reference points, and as a fallback for time series when the SAG API
+returns nothing (e.g. HTTP 503).}
 }
 \value{
 Named list with only:
@@ -85,7 +89,7 @@ unique(mac$ts$sid)
 utils::tail(mac$ts, 5)
 
 # catch bridge is separate
-advice = loadAdviceFlqs(sid = unique(mac$ts$sid))
+advice = loadAdviceFlqs("path/to/advice.csv", sid = unique(mac$ts$sid))
 
 requested = bimSids()$sid
 all = getSAG(requested)
@@ -99,9 +103,12 @@ all2 = getSAG(requested, yearBack = 2)
 pel = getSAG(subset(bimSids(), fishery == "Pelagics")$sid)
 # explicit year: no per-sid cascade (yearBack ignored)
 mac25 = getSAG("mac.27.nea", year = 2025)
+
+# local CSVs if the API is down
+sag = getSAG(sids, yearBack = 3, root = "data/sdGraphs")
 }
 }
 \seealso{
 \code{\link{fetchSagTs}}, \code{\link{fetchSagRefpts}},
-  \code{\link{loadAdviceFlqs}}, \code{\link{bimSids}}
+  \code{\link{readSag}}, \code{\link{loadAdviceFlqs}}, \code{\link{bimSids}}
 }

@@ -1,8 +1,8 @@
 Package: icesdata
 Type: Package
 Title: ICES Age-Structured Stock Assessment Data and Utilities
-Version: 0.2.0
-Date: 2026-08-15
+Version: 0.2.3
+Date: 2026-08-26
 Authors@R: c(person("ICES", "Working Group", email = "ices@ices.dk", role = c("aut", "cre")), person("Your", "Name", email = "your.email@institution.org", role = "aut"))
 Description: Comprehensive package for ICES age-structured stock assessment data, 
     including utility functions for data processing, analysis, and visualization. 
@@ -21,6 +21,7 @@ Imports:
     dplyr,
     ggplot2,
     plyr,
+    reshape,
     stats,
     utils,
     TMB
